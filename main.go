@@ -2,18 +2,25 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
+	"forum/app/controllers"
 	"forum/app/routers"
 )
 
 func main() {
-	// declare a new instance of the router:
+	// Parse the static files:
+	var err error
+	controllers.Tmpl, err = template.ParseGlob("./app/views/*.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// create a new instance of the router:
 	router := routers.NewRouter()
 	// Map the routs the specific handler
 	router.RouteHandler()
-
 	// Start the server
 	fmt.Println("run: http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", router))

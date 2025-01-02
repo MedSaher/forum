@@ -37,5 +37,5 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // Create a new handler:
 func (router *Router) RouteHandler() {
 	router.AddRoute("/", controllers.HomeHandler)
-	router.AddRoute("/user", controllers.UserHandler)
+	router.AddRoute("/user", controllers.GetAllUsersHandler)
 }

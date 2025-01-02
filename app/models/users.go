@@ -1,17 +1,12 @@
 package models
 
-import (
-	
-)
-
 // Declare a model to represent the user and ease data exchange between backend and frontend:
 type User struct {
 	ID             int    `json:"id"`
 	FirstName      string `json:"firstName"`
 	LastName       string `json:"lastName"`
-	UserName       string `json:"userName"`
 	Email          string `json:"email"`
-	PasswordHash       string `json:"password"`
+	PasswordHash   string `json:"password"`
 	ProfilePicture string `json:"profilePicture"`
 	Role           string `json:"role"`
 }
@@ -23,6 +18,7 @@ func CreateUser(firstName, lastName, email, password, profilePicture, role strin
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 	query := `INSERT INTO User (FirstName, LastName, Email, PasswordHash, ProfilePicture, Role)
           VALUES (?, ?, ?, ?, ?, ?)`
 	_, err = db.Exec(query, firstName, lastName, email, password, profilePicture, role)
@@ -32,28 +28,27 @@ func CreateUser(firstName, lastName, email, password, profilePicture, role strin
 	return nil
 }
 
-// Read users from database:
-func GetUsers() ([]*User, error){
+// Fetch all Users
+func GetAllUsers() ([]*User, error) {
 	db, err := Connection()
 	if err != nil {
 		return nil, err
 	}
-	rows, err := db.Query("SELECT id, name, email FROM users")
+	defer db.Close()
+	// Fetch Users from the database
+	rows, err := db.Query("SELECT * FROM User")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var users []*User
+	var Users []*User
 	for rows.Next() {
-		var user = &User{}
-		err = rows.Scan(user.ID, user.FirstName, user.LastName, user.Email, user.PasswordHash, user.ProfilePicture, user.Role)
-		if err != nil {
+		user := &User{}
+		if err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash, &user.ProfilePicture, &user.Role); err != nil {
 			return nil, err
 		}
-		users = append(users, user)
+		Users = append(Users, user)
 	}
-	return users, nil
+	return Users, nil
 }
-
-
