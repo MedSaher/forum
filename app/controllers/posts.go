@@ -8,13 +8,13 @@ import (
 )
 
 // Get all users:
-func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+func GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	// Fetch books from the database
-	users, err := models.GetAllUsers()
+	users, err := models.GetAllPosts()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

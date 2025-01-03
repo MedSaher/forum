@@ -8,20 +8,19 @@ type User struct {
 	Email          string `json:"email"`
 	PasswordHash   string `json:"password"`
 	ProfilePicture string `json:"profilePicture"`
-	Role           string `json:"role"`
 }
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new user:
-func CreateUser(firstName, lastName, email, password, profilePicture, role string) error {
+func CreateUser(firstName, lastName, email, password, profilePicture string) error {
 	db, err := Connection()
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	query := `INSERT INTO User (FirstName, LastName, Email, PasswordHash, ProfilePicture, Role)
-          VALUES (?, ?, ?, ?, ?, ?)`
-	_, err = db.Exec(query, firstName, lastName, email, password, profilePicture, role)
+	query := `INSERT INTO User (FirstName, LastName, Email, PasswordHash, ProfilePicture)
+          VALUES (?, ?, ?, ?, ?)`
+	_, err = db.Exec(query, firstName, lastName, email, password, profilePicture)
 	if err != nil {
 		return err
 	}
@@ -45,7 +44,7 @@ func GetAllUsers() ([]*User, error) {
 	var Users []*User
 	for rows.Next() {
 		user := &User{}
-		if err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash, &user.ProfilePicture, &user.Role); err != nil {
+		if err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash, &user.ProfilePicture); err != nil {
 			return nil, err
 		}
 		Users = append(Users, user)
