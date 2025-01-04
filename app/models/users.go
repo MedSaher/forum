@@ -1,5 +1,7 @@
 package models
 
+import "fmt"
+
 // Declare a model to represent the user and ease data exchange between backend and frontend:
 type User struct {
 	ID             int    `json:"id"`
@@ -7,23 +9,34 @@ type User struct {
 	LastName       string `json:"lastName"`
 	Email          string `json:"email"`
 	PasswordHash   string `json:"password"`
-	ProfilePicture string `json:"profilePicture"`
+	ProfilePicture []byte `json:"profilePicture"`
 }
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new user:
-func CreateUser(firstName, lastName, email, password, profilePicture string) error {
-	db, err := Connection()
+func CreateUser(user *User) error {
+	db, err := Connection() // Assuming Connection() returns *sql.DB
 	if err != nil {
 		return err
 	}
 	defer db.Close()
+
 	query := `INSERT INTO User (FirstName, LastName, Email, PasswordHash, ProfilePicture)
-          VALUES (?, ?, ?, ?, ?)`
-	_, err = db.Exec(query, firstName, lastName, email, password, profilePicture)
+	          VALUES (?, ?, ?, ?, ?)`
+
+	// Execute the query and get the result
+	result, err := db.Exec(query, user.FirstName, user.LastName, user.Email, user.PasswordHash, user.ProfilePicture)
 	if err != nil {
 		return err
 	}
+
+	// Retrieve the auto-generated ID
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	user.ID = int(id) // Update the user struct with the auto-generated ID
+	fmt.Println(user)
 	return nil
 }
 

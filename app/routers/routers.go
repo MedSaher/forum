@@ -38,4 +38,6 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (router *Router) RouteHandler() {
 	router.AddRoute("/", controllers.HomeHandler)
 	router.AddRoute("/user", controllers.GetAllUsersHandler)
+	router.AddRoute("/post/categories", controllers.GetAllCategories)
+	router.AddRoute("/api/register", controllers.RegisterUserHandler)
 }

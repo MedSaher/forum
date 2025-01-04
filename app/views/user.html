@@ -1,12 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>User Registration Form</title>
+    <style>
+        form {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="file"],
+        button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>{{.}}</h1>
-    <a href="/">home</a>
+
+    <h2 style="text-align: center;">User Registration Form</h2>
+    <form action="/submit" id="registrationForm" method="post" enctype="multipart/form-data">
+        <label for="firstName">First Name</label>
+        <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required>
+
+        <label for="lastName">Last Name</label>
+        <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+        <label for="profilePicture">Profile Picture</label>
+        <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        document.getElementById("registrationForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById("profilePicture");
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please select a profile picture.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const base64Image = reader.result.split(",")[1];
+
+                const user = {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value, // Hash this on the backend
+                    profilePicture: base64Image,
+                };
+
+                const response = await fetch("/insert-user", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(user),
+                });
+
+                const result = await response.json();
+                console.log(result);
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+    </script>
 </body>
+
 </html>
