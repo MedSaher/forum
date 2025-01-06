@@ -9,7 +9,7 @@ type User struct {
 	LastName       string `json:"lastName"`
 	Email          string `json:"email"`
 	PasswordHash   string `json:"password"`
-	ProfilePicture []byte `json:"profilePicture"`
+	ProfilePicture string `json:"profilePicture"`
 }
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:

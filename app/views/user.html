@@ -1,106 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Registration Form</title>
+    <title>Login & Registration Page</title>
     <style>
-        form {
-            max-width: 400px;
-            margin: auto;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            width: 400px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 20px;
+        }
+        .form-toggle {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-toggle button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .form-toggle button.active {
+            background-color: #0056b3;
+        }
+        form {
+            display: none;
+        }
+        form.active {
+            display: block;
+        }
+        input[type="text"], input[type="password"], input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
-            background-color: #f9f9f9;
         }
-
-        label {
-            display: block;
-            margin: 10px 0 5px;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        input[type="file"],
-        button {
+        button[type="submit"] {
             width: 100%;
-            padding: 8px;
-            margin: 5px 0 10px;
-        }
-
-        button {
-            background-color: #4CAF50;
-            color: white;
+            padding: 10px;
+            background-color: #28a745;
             border: none;
+            color: white;
+            border-radius: 5px;
             cursor: pointer;
         }
-
-        button:hover {
-            background-color: #45a049;
+        button[type="submit"]:hover {
+            background-color: #218838;
         }
     </style>
 </head>
-
 <body>
+    <div class="container">
+        <div class="form-toggle">
+            <button id="login-btn" class="active">Login</button>
+            <button id="register-btn">Register</button>
+        </div>
+        <form id="login-form" class="active">
+            <h2>Login</h2>
+            <input type="text" placeholder="Username" required>
+            <input type="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <form id="register-form" enctype="multipart/form-data">
+            <h2>Register</h2>
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required>
 
-    <h2 style="text-align: center;">User Registration Form</h2>
-    <form action="/submit" id="registrationForm" method="post" enctype="multipart/form-data">
-        <label for="firstName">First Name</label>
-        <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required>
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" required>
 
-        <label for="lastName">Last Name</label>
-        <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" required>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" required>
 
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            <label for="profilePicture">Profile Picture</label>
+            <input type="file" id="profilePicture" name="profilePicture" accept="image/*" required>
 
-        <label for="profilePicture">Profile Picture</label>
-        <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+            <button type="submit">Submit</button>
+        </form>
+        <div id="loader" style="display: none;">Submitting...</div>
+    </div>
 
-        <button type="submit">Submit</button>
-    </form>
     <script>
-        document.getElementById("registrationForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
 
-            const fileInput = document.getElementById("profilePicture");
-            const file = fileInput.files[0];
-            if (!file) {
-                alert("Please select a profile picture.");
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const base64Image = reader.result.split(",")[1];
-
-                const user = {
-                    firstName: document.getElementById('firstName').value,
-                    lastName: document.getElementById('lastName').value,
-                    email: document.getElementById('email').value,
-                    password: document.getElementById('password').value, // Hash this on the backend
-                    profilePicture: base64Image,
-                };
-
-                const response = await fetch("/insert-user", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(user),
-                });
-
-                const result = await response.json();
-                console.log(result);
-            };
-
-            reader.readAsDataURL(file);
+        loginBtn.addEventListener('click', () => {
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+            loginBtn.classList.add('active');
+            registerBtn.classList.remove('active');
         });
 
+        registerBtn.addEventListener('click', () => {
+            registerForm.classList.add('active');
+            loginForm.classList.remove('active');
+            registerBtn.classList.add('active');
+            loginBtn.classList.remove('active');
+        });
+
+        document.getElementById("register-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const loader = document.getElementById("loader");
+            const formData = new FormData(registerForm);
+
+            loader.style.display = "block";
+
+            try {
+                const response = await fetch("/register", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert("Registration successful! " + result.message);
+                } else {
+                    const error = await response.json();
+                    alert("Registration failed: " + error.message);
+                }
+            } catch (err) {
+                alert("An error occurred while submitting your data. Please try again.");
+                console.error("Fetch error:", err);
+            } finally {
+                loader.style.display = "none";
+            }
+        });
     </script>
 </body>
-
 </html>
