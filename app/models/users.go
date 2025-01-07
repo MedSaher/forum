@@ -1,6 +1,12 @@
 package models
 
-import "fmt"
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+)
+
+var ErrUserNotFound = errors.New("user not found")
 
 // Declare a model to represent the user and ease data exchange between backend and frontend:
 type User struct {
@@ -63,4 +69,56 @@ func GetAllUsers() ([]*User, error) {
 		Users = append(Users, user)
 	}
 	return Users, nil
+}
+
+func GetUserByID(id string) (*User, error) {
+	db, err := Connection()
+	if err != nil {
+		return nil, err
+	}
+	var user User
+
+	query := `
+		SELECT id, first_name, last_name, email, password_hash, profile_picture 
+		FROM users 
+		WHERE id = ?`
+
+	err = db.QueryRow(query, id).Scan(
+		&user.ID,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.PasswordHash,
+		&user.ProfilePicture,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// Helper function to check if a user exists by ID
+func UserExists(id string) (bool, error) {
+	db, err := Connection()
+	if err != nil {
+		return false, err
+	}
+	var exists bool
+	query := "SELECT EXISTS(SELECT 1 FROM users WHERE id = ?)"
+
+	err = db.QueryRow(query, id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+// For handling errors in your controllers, you can use this helper:
+func IsNotFoundError(err error) bool {
+	return errors.Is(err, ErrUserNotFound)
 }

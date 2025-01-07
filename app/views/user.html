@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@
             align-items: center;
             height: 100vh;
         }
+
         .container {
             width: 400px;
             background: #fff;
@@ -22,10 +24,12 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 20px;
         }
+
         .form-toggle {
             text-align: center;
             margin-bottom: 20px;
         }
+
         .form-toggle button {
             margin: 5px;
             padding: 10px 20px;
@@ -35,22 +39,29 @@
             cursor: pointer;
             border-radius: 5px;
         }
+
         .form-toggle button.active {
             background-color: #0056b3;
         }
+
         form {
             display: none;
         }
+
         form.active {
             display: block;
         }
-        input[type="text"], input[type="password"], input[type="email"] {
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+
         button[type="submit"] {
             width: 100%;
             padding: 10px;
@@ -60,11 +71,13 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
         button[type="submit"]:hover {
             background-color: #218838;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="form-toggle">
@@ -121,10 +134,12 @@
 
         document.getElementById("register-form").addEventListener("submit", async (e) => {
             e.preventDefault();
-
-            const loader = document.getElementById("loader");
+            const imagePath = document.getElementById('profilePicture');
+            if (!imagePath) {
+                alert("Please choose a image.");
+                return;
+            }
             const formData = new FormData(registerForm);
-
             loader.style.display = "block";
 
             try {
@@ -149,4 +164,5 @@
         });
     </script>
 </body>
+
 </html>
