@@ -4,24 +4,97 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
-var ErrUserNotFound = errors.New("user not found")
+var (
+	ErrUserNotFound = errors.New("user not found")
+)
 
-// Declare a model to represent the user and ease data exchange between backend and frontend:
 type User struct {
 	ID             int    `json:"id"`
 	FirstName      string `json:"firstName"`
 	LastName       string `json:"lastName"`
 	Email          string `json:"email"`
-	PasswordHash   string `json:"password"`
+	PasswordHash   string `json:"-"` // The "-" tag prevents the password from being included in JSON
 	ProfilePicture string `json:"profilePicture"`
+}
+
+// Create a connection with sqlite database:
+func Connection() (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", "./forum.db")
+	if err != nil {
+		return nil, err
+	}
+	// defer db.Close()
+	return db, nil
+}
+
+
+func GetUserByID(id string) (*User, error) {
+	db, err := Connection()
+	if err != nil {
+		return nil, err
+	}
+	user := &User{}
+	query := `
+		SELECT id, first_name, last_name, email, password_hash, profile_picture 
+		FROM User
+		WHERE id = ?`
+
+	err = db.QueryRow(query, id).Scan(
+		user.ID,
+		user.FirstName,
+		user.LastName,
+		user.Email,
+		user.PasswordHash,
+		user.ProfilePicture,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// Helper function to check if a user exists by ID
+func UserExists(id string) (bool, error) {
+	db, err := Connection()
+	if err != nil {
+		return false, err
+	}
+	var exists bool
+	query := "SELECT EXISTS(SELECT 1 FROM users WHERE id = ?)"
+
+	err = db.QueryRow(query, id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+// For handling errors in your controllers
+func IsNotFoundError(err error) bool {
+	return errors.Is(err, ErrUserNotFound)
+}
+
+// CloseDB closes the database connection
+func CloseDB(db *sql.DB) error {
+	if db != nil {
+		return db.Close()
+	}
+	return nil
 }
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new user:
 func CreateUser(user *User) error {
-	db, err := Connection() // Assuming Connection() returns *sql.DB
+	db, err := Connection()
 	if err != nil {
 		return err
 	}
@@ -71,54 +144,19 @@ func GetAllUsers() ([]*User, error) {
 	return Users, nil
 }
 
-func GetUserByID(id string) (*User, error) {
-	db, err := Connection()
-	if err != nil {
-		return nil, err
-	}
-	var user User
-
-	query := `
-		SELECT id, first_name, last_name, email, password_hash, profile_picture 
-		FROM users 
-		WHERE id = ?`
-
-	err = db.QueryRow(query, id).Scan(
-		&user.ID,
-		&user.FirstName,
-		&user.LastName,
-		&user.Email,
-		&user.PasswordHash,
-		&user.ProfilePicture,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, ErrUserNotFound
-		}
-		return nil, err
-	}
-
-	return &user, nil
-}
-
-// Helper function to check if a user exists by ID
-func UserExists(id string) (bool, error) {
+// Add this function to check for existing email
+func CheckEmailExists(email string) (bool, error) {
 	db, err := Connection()
 	if err != nil {
 		return false, err
 	}
 	var exists bool
-	query := "SELECT EXISTS(SELECT 1 FROM users WHERE id = ?)"
+	query := "SELECT EXISTS(SELECT 1 FROM User WHERE email = ?)"
 
-	err = db.QueryRow(query, id).Scan(&exists)
+	err = db.QueryRow(query, email).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
 
 	return exists, nil
-}
-
-// For handling errors in your controllers, you can use this helper:
-func IsNotFoundError(err error) bool {
-	return errors.Is(err, ErrUserNotFound)
 }

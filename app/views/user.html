@@ -1,168 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login & Registration Page</title>
+    <title>User Authentication</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            width: 400px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        .form-container {
+            max-width: 400px;
+            margin: 0 auto;
             padding: 20px;
         }
-
-        .form-toggle {
-            text-align: center;
-            margin-bottom: 20px;
+        .form-group {
+            margin-bottom: 15px;
         }
-
-        .form-toggle button {
-            margin: 5px;
-            padding: 10px 20px;
-            border: none;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        .form-toggle button.active {
-            background-color: #0056b3;
-        }
-
-        form {
+        .hidden {
             display: none;
-        }
-
-        form.active {
-            display: block;
-        }
-
-        input[type="text"],
-        input[type="password"],
-        input[type="email"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        button[type="submit"] {
-            width: 100%;
-            padding: 10px;
-            background-color: #28a745;
-            border: none;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #218838;
         }
     </style>
 </head>
-
 <body>
-    <div class="container">
-        <div class="form-toggle">
-            <button id="login-btn" class="active">Login</button>
-            <button id="register-btn">Register</button>
-        </div>
-        <form id="login-form" class="active">
+    <div class="form-container">
+        <div id="loginForm">
             <h2>Login</h2>
-            <input type="text" placeholder="Username" required>
-            <input type="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <form id="register-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="loginPassword" placeholder="Password" required>
+            </div>
+            <button onclick="login()">Login</button>
+            <p>Don't have an account? <a href="#" onclick="toggleForms()">Register</a></p>
+        </div>
+
+        <div id="registerForm" class="hidden">
             <h2>Register</h2>
-            <label for="firstName">First Name</label>
-            <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required>
-
-            <label for="lastName">Last Name</label>
-            <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" required>
-
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="Enter your email" required>
-
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" required>
-
-            <label for="profilePicture">Profile Picture</label>
-            <input type="file" id="profilePicture" name="profilePicture" accept="image/*" required>
-
-            <button type="submit">Submit</button>
-        </form>
-        <div id="loader" style="display: none;">Submitting...</div>
+            <div class="form-group">
+                <input type="text" id="firstName" placeholder="First Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="lastName" placeholder="Last Name" required>
+            </div>
+            <div class="form-group">
+                <input type="email" id="registerEmail" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="registerPassword" placeholder="Password" required>
+            </div>
+            <div class="form-group">
+                <input type="file" id="profilePicture" accept="image/*" required>
+            </div>
+            <button onclick="register()">Register</button>
+            <p>Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
+        </div>
     </div>
 
     <script>
-        const loginBtn = document.getElementById('login-btn');
-        const registerBtn = document.getElementById('register-btn');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
+        function toggleForms() {
+            document.getElementById('loginForm').classList.toggle('hidden');
+            document.getElementById('registerForm').classList.toggle('hidden');
+        }
 
-        loginBtn.addEventListener('click', () => {
-            loginForm.classList.add('active');
-            registerForm.classList.remove('active');
-            loginBtn.classList.add('active');
-            registerBtn.classList.remove('active');
-        });
-
-        registerBtn.addEventListener('click', () => {
-            registerForm.classList.add('active');
-            loginForm.classList.remove('active');
-            registerBtn.classList.add('active');
-            loginBtn.classList.remove('active');
-        });
-
-        document.getElementById("register-form").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const imagePath = document.getElementById('profilePicture');
-            if (!imagePath) {
-                alert("Please choose a image.");
-                return;
-            }
-            const formData = new FormData(registerForm);
-            loader.style.display = "block";
-
+        async function register() {
+            const formData = new FormData();
+            formData.append('firstName', document.getElementById('firstName').value);
+            formData.append('lastName', document.getElementById('lastName').value);
+            formData.append('email', document.getElementById('registerEmail').value);
+            formData.append('password', document.getElementById('registerPassword').value);
+            formData.append('profilePicture', document.querySelector('#profilePicture').files[0]);
+            let image = document.getElementById("profilePicture")
+            console.log(image)
             try {
-                const response = await fetch("/register", {
-                    method: "POST",
-                    body: formData,
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    body: formData
                 });
 
                 if (response.ok) {
-                    const result = await response.json();
-                    alert("Registration successful! " + result.message);
+                    const user = await response.json();
+                    alert('Registration successful!');
+                    toggleForms();
                 } else {
-                    const error = await response.json();
-                    alert("Registration failed: " + error.message);
+                    alert('Registration failed: ' + await response.text());
                 }
-            } catch (err) {
-                alert("An error occurred while submitting your data. Please try again.");
-                console.error("Fetch error:", err);
-            } finally {
-                loader.style.display = "none";
+            } catch (error) {
+                alert('Error during registration: ' + error.message);
             }
-        });
+        }
+
+        async function login() {
+            const credentials = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(credentials)
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    alert('Login successful!');
+                    // Handle successful login (e.g., redirect to dashboard)
+                } else {
+                    alert('Login failed: ' + await response.text());
+                }
+            } catch (error) {
+                alert('Error during login: ' + error.message);
+            }
+        }
     </script>
 </body>
-
 </html>

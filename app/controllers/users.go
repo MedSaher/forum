@@ -3,54 +3,152 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"forum/app/models"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
+type Response struct {
+	Message string `json:"message,omitempty"`
+	Error   string `json:"error,omitempty"`
+}
 
-// Get all users:
 func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	// Fetch books from the database
+
 	users, err := models.GetAllUsers()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// Respond with JSON
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
 }
 
-// Create a handler for creating a new user:
 func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Parse the JSON body
-	var user *models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	// Parse multipart form with 10MB limit
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
+
+	// Get and validate form fields
+	firstName := strings.TrimSpace(r.FormValue("firstName"))
+	lastName := strings.TrimSpace(r.FormValue("lastName"))
+	email := strings.TrimSpace(r.FormValue("email"))
+	password := r.FormValue("password")
 
 	// Validate required fields
-	if user.FirstName == "" || user.LastName == "" || user.Email == "" || user.PasswordHash == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "First name, last name, email, and password are required"})
+	if firstName == "" || lastName == "" || email == "" || password == "" {
+		http.Error(w, "All fields are required", http.StatusBadRequest)
 		return
 	}
-	fmt.Println(user.ProfilePicture)
-	models.CreateUser(user)
-	// Send a success response
+
+	// Check if email already exists
+	exists, err := models.CheckEmailExists(email)
+	if err != nil {
+		http.Error(w, "Error happens here"+ err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if exists {
+		http.Error(w, "Email already registered", http.StatusConflict)
+		return
+	}
+
+	// Handle file upload
+	file, header, err := r.FormFile("profilePicture")
+	if err != nil {
+		http.Error(w, "Profile picture is required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Validate file type
+	if !isAllowedFileType(header.Filename) {
+		http.Error(w, "Invalid file type. Only jpg, jpeg, png allowed", http.StatusBadRequest)
+		return
+	}
+
+	// Create unique filename
+	filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), header.Filename)
+	uploadPath := filepath.Join("app", "assets", "images")
+
+	// Ensure upload directory exists
+	if err := os.MkdirAll(uploadPath, 0o755); err != nil {
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Create destination file
+	filePath := filepath.Join(uploadPath, filename)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		http.Error(w, "Failed to save image", http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	// Copy file content
+	if _, err := io.Copy(dst, file); err != nil {
+		os.Remove(filePath) // Clean up on error
+		http.Error(w, "Failed to save image", http.StatusInternalServerError)
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		os.Remove(filePath) // Clean up on error
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Create user model
+	user := &models.User{
+		FirstName:      firstName,
+		LastName:       lastName,
+		Email:          email,
+		PasswordHash:   string(hashedPassword),
+		ProfilePicture: filename,
+	}
+
+	// Save to database
+	if err := models.CreateUser(user); err != nil {
+		os.Remove(filePath) // Clean up on error
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		return
+	}
+    fmt.Println(user)
+	// Return success response
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(Response{Message: "User registered successfully"})
+	json.NewEncoder(w).Encode(Response{
+		Message: fmt.Sprintf("User %s %s registered successfully!", firstName, lastName),
+	})
+}
+
+func isAllowedFileType(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	validTypes := map[string]bool{
+		".jpg":  true,
+		".jpeg": true,
+		".png":  true,
+	}
+	return validTypes[ext]
 }
