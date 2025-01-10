@@ -22,6 +22,6 @@ func main() {
 	// Map the routs the specific handler
 	router.RouteHandler()
 	// Start the server
-	fmt.Println("run: http://localhost:8080/upload")
+	fmt.Println("run: http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

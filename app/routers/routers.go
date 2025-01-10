@@ -40,5 +40,4 @@ func (router *Router) RouteHandler() {
 	router.AddRoute("/user", controllers.GetAllUsersHandler)
 	router.AddRoute("/post/categories", controllers.GetAllCategories)
 	router.AddRoute("/register", controllers.RegisterUserHandler)
-	router.AddRoute("/upload", controllers.UploadHandler)
 }

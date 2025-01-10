@@ -2,23 +2,21 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
+	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"forum/app/models"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Response struct {
-	Message string `json:"message,omitempty"`
-	Error   string `json:"error,omitempty"`
-}
+// Declare a golobale template variable:
+var Tmpl *template.Template
 
 func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -36,35 +34,39 @@ func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
+// Register a new user to my app:
 func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	// Check if the request is a GET request. If so, render the form for user registration.
+	if r.Method == http.MethodGet {
+		Tmpl.ExecuteTemplate(w, "user.html", nil)
 		return
 	}
 
-	// Parse multipart form with 10MB limit
+	// Parse the multipart form with a maximum memory of 10MB for uploaded files.
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
+		log.Printf("Failed to parse form: %v", err)
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
-	// Get and validate form fields
-	firstName := strings.TrimSpace(r.FormValue("firstName"))
+	// Extract form values for user details.
+	firstName := strings.TrimSpace(r.FormValue("firstName")) // Remove leading/trailing spaces
 	lastName := strings.TrimSpace(r.FormValue("lastName"))
 	email := strings.TrimSpace(r.FormValue("email"))
-	password := r.FormValue("password")
+	password := r.FormValue("password") // No need to trim spaces from passwords.
 
-	// Validate required fields
+	// Validate required fields to ensure none are empty.
 	if firstName == "" || lastName == "" || email == "" || password == "" {
 		http.Error(w, "All fields are required", http.StatusBadRequest)
 		return
 	}
 
-	// Check if email already exists
+	// Check if the email already exists in the database.
 	exists, err := models.CheckEmailExists(email)
 	if err != nil {
-		http.Error(w, "Error happens here"+ err.Error(), http.StatusInternalServerError)
+		log.Printf("Error checking email: %v", err)
+		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 	if exists {
@@ -72,75 +74,86 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Handle file upload
-	file, header, err := r.FormFile("profilePicture")
+	// Retrieve the uploaded profile picture file.
+	file, handler, err := r.FormFile("profilePicture")
 	if err != nil {
-		http.Error(w, "Profile picture is required", http.StatusBadRequest)
+		log.Printf("Error retrieving file: %v", err)
+		http.Error(w, "Error retrieving file", http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
+	defer file.Close() // Ensure the file is closed after processing.
 
-	// Validate file type
-	if !isAllowedFileType(header.Filename) {
+	// Validate the file type to allow only JPG, JPEG, or PNG files.
+	if !isAllowedFileType(handler.Filename) {
 		http.Error(w, "Invalid file type. Only jpg, jpeg, png allowed", http.StatusBadRequest)
 		return
 	}
 
-	// Create unique filename
-	filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), header.Filename)
-	uploadPath := filepath.Join("app", "assets", "images")
-
-	// Ensure upload directory exists
-	if err := os.MkdirAll(uploadPath, 0o755); err != nil {
-		http.Error(w, "Server error", http.StatusInternalServerError)
-		return
+	// Define the directory where uploaded files will be saved.
+	uploadDir := "./uploads"
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		// Create the uploads directory if it doesn't exist.
+		if err := os.Mkdir(uploadDir, os.ModePerm); err != nil {
+			log.Fatalf("Failed to create upload directory: %v", err)
+		}
 	}
 
-	// Create destination file
-	filePath := filepath.Join(uploadPath, filename)
-	dst, err := os.Create(filePath)
+	// Define the full path where the file will be saved.
+	filePath := filepath.Join(uploadDir, handler.Filename)
+	destFile, err := os.Create(filePath) // Create the file on the server.
 	if err != nil {
-		http.Error(w, "Failed to save image", http.StatusInternalServerError)
+		log.Printf("Error creating file: %v", err)
+		http.Error(w, "Error saving file", http.StatusInternalServerError)
 		return
 	}
-	defer dst.Close()
+	defer destFile.Close() // Ensure the file is closed after writing.
 
-	// Copy file content
-	if _, err := io.Copy(dst, file); err != nil {
-		os.Remove(filePath) // Clean up on error
-		http.Error(w, "Failed to save image", http.StatusInternalServerError)
+	// Save the file content to the newly created file.
+	_, err = io.Copy(destFile, file)
+	if err != nil {
+		log.Printf("Error saving file: %v", err)
+		http.Error(w, "Error saving file", http.StatusInternalServerError)
 		return
 	}
 
-	// Hash password
+	// Hash the user's password for secure storage in the database.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		os.Remove(filePath) // Clean up on error
+		// Clean up the uploaded file if password hashing fails.
+		os.Remove(filePath)
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 
-	// Create user model
+	// Create a new user object with all the required fields.
 	user := &models.User{
 		FirstName:      firstName,
 		LastName:       lastName,
 		Email:          email,
-		PasswordHash:   string(hashedPassword),
-		ProfilePicture: filename,
+		PasswordHash:   string(hashedPassword),         // Save the hashed password.
+		ProfilePicture: "/uploads/" + handler.Filename, // Store the file's relative path.
 	}
 
-	// Save to database
+	// Log the user data for debugging purposes.
+	log.Printf("Attempting to save user: %+v", user)
+
+	// Save the user to the database.
 	if err := models.CreateUser(user); err != nil {
-		os.Remove(filePath) // Clean up on error
+		log.Printf("Error saving user to database: %v", err)
+		// Remove the file if the database operation fails.
+		os.Remove(filePath)
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
-    fmt.Println(user)
-	// Return success response
+
+	// Log success and send a response back to the client.
+	log.Println("User successfully registered.")
+	response := map[string]string{
+		"message":   "User registered successfully",
+		"image_url": user.ProfilePicture,
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(Response{
-		Message: fmt.Sprintf("User %s %s registered successfully!", firstName, lastName),
-	})
+	json.NewEncoder(w).Encode(response) // Return success response in JSON format.
 }
 
 func isAllowedFileType(filename string) bool {
