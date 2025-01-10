@@ -30,6 +30,7 @@ WORKDIR /go-app
 COPY --from=build /go-app /go-app
 COPY ./app /go-app/app
 COPY ./forum.db /go-app/forum.db
+COPY ./app/uploads /go-app/app/uploads
 
 # Step 11: Expose the port the Go app will run on
 EXPOSE 8080

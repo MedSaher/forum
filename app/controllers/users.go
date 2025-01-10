@@ -90,7 +90,7 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Define the directory where uploaded files will be saved.
-	uploadDir := "./uploads"
+	uploadDir := "./app/uploads"
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
 		// Create the uploads directory if it doesn't exist.
 		if err := os.Mkdir(uploadDir, os.ModePerm); err != nil {
@@ -130,8 +130,8 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		FirstName:      firstName,
 		LastName:       lastName,
 		Email:          email,
-		PasswordHash:   string(hashedPassword),         // Save the hashed password.
-		ProfilePicture: "/uploads/" + handler.Filename, // Store the file's relative path.
+		PasswordHash:   string(hashedPassword), // Save the hashed password.
+		ProfilePicture: handler.Filename,       // Store the file's relative path.
 	}
 
 	// Log the user data for debugging purposes.
