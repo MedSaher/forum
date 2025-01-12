@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"forum/app/config"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
-	ErrUserNotFound = errors.New("user not found")
-)
+var ErrUserNotFound = errors.New("user not found")
 
 type User struct {
 	ID             int    `json:"id"`
@@ -21,19 +21,8 @@ type User struct {
 	ProfilePicture string `json:"profilePicture"`
 }
 
-// Create a connection with sqlite database:
-func Connection() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "./forum.db")
-	if err != nil {
-		return nil, err
-	}
-	// defer db.Close()
-	return db, nil
-}
-
-
 func GetUserByID(id string) (*User, error) {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +52,7 @@ func GetUserByID(id string) (*User, error) {
 
 // Helper function to check if a user exists by ID
 func UserExists(id string) (bool, error) {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return false, err
 	}
@@ -94,7 +83,7 @@ func CloseDB(db *sql.DB) error {
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new user:
 func CreateUser(user *User) error {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return err
 	}
@@ -121,7 +110,7 @@ func CreateUser(user *User) error {
 
 // Fetch all Users
 func GetAllUsers() ([]*User, error) {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +135,7 @@ func GetAllUsers() ([]*User, error) {
 
 // Add this function to check for existing email
 func CheckEmailExists(email string) (bool, error) {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return false, err
 	}
@@ -157,6 +146,23 @@ func CheckEmailExists(email string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
 	return exists, nil
+}
+
+// Login and credentials validation validition:
+func GetUserByEmail(email string) (*User, error) {
+	var user User
+	db, err := config.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	query := "SELECT * FROM User WHERE email = ?"
+	err = db.QueryRow(query, email).Scan(user.ID, user.FirstName, user.LastName, user.Email, user.PasswordHash, user.ProfilePicture)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+	return &user, nil
 }

@@ -1,5 +1,7 @@
 package models
 
+import "forum/app/config"
+
 // Declare a model to represent the Post and ease data exchange between backend and frontend:
 type Post struct {
 	ID           int    `json:"id"`
@@ -14,7 +16,7 @@ type Post struct {
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new Post:
 func CreatePost(title, content string, authorId string) error {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return err
 	}
@@ -30,7 +32,7 @@ func CreatePost(title, content string, authorId string) error {
 
 // Fetch all Posts
 func GetAllPosts() ([]*Post, error) {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}

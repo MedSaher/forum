@@ -205,8 +205,8 @@
             e.preventDefault();
             clearErrors();
 
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
 
             let isValid = true;
 
@@ -222,31 +222,26 @@
 
             if (isValid) {
                 try {
-                    const response = await fetch('/api/login', {
+                    const response = await fetch('/login', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({
-                            email,
-                            password
-                        })
+                        credentials: 'include', // Ensures cookies (e.g., CSRF tokens) are sent with the request
+                        body: JSON.stringify({ email, password })
                     });
 
                     if (response.ok) {
-                        const data = await response.json();
-                        // Store token in localStorage
-                        localStorage.setItem('authToken', data.token);
                         window.location.href = '/dashboard'; // Redirect to dashboard
                     } else {
-                        const data = await response.json();
-                        showError('loginEmailError', data.error || 'Invalid email or password');
+                        showError('loginEmailError', 'Invalid credentials');
                     }
                 } catch (error) {
                     showError('loginEmailError', 'An error occurred. Please try again later.');
                 }
             }
         });
+
 
     </script>
 </body>

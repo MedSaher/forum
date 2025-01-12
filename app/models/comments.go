@@ -1,5 +1,7 @@
 package models
 
+import "forum/app/config"
+
 // comment model: [one to many with Comment] and [one to many with user]:
 type Comment struct {
 	ID           int    `json:"id"`
@@ -15,7 +17,7 @@ type Comment struct {
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new Comment:
 func CreateComment(title, content string, authorId string) error {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return err
 	}
@@ -31,7 +33,7 @@ func CreateComment(title, content string, authorId string) error {
 
 // Fetch all Comments
 func GetAllComments() ([]*Comment, error) {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}

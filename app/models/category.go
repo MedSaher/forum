@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"forum/app/config"
 )
 
 // Category represents a category with a name and description
@@ -13,7 +14,7 @@ type Category struct {
 
 // GetAllCategories retrieves all categories from the database
 func GetAllCategories() ([]*Category, error) {
-	db, Err := Connection()
+	db, Err := config.InitDB()
 	if Err != nil {
 		return nil, Err
 	}

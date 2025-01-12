@@ -11,12 +11,17 @@ import (
 	"strings"
 
 	"forum/app/models"
-
-	"golang.org/x/crypto/bcrypt"
+	"forum/app/utils"
 )
 
 // Declare a golobale template variable:
 var Tmpl *template.Template
+
+// Create a loging credentials structure:
+type Credentials struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 
 func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -117,7 +122,7 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Hash the user's password for secure storage in the database.
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := utils.GenerateCryptoPassword(password)
 	if err != nil {
 		// Clean up the uploaded file if password hashing fails.
 		os.Remove(filePath)
@@ -164,4 +169,27 @@ func isAllowedFileType(filename string) bool {
 		".png":  true,
 	}
 	return validTypes[ext]
+}
+
+// Create a login handler:
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	credentials := &Credentials{}
+	// Parse request body
+	if err := json.NewDecoder(r.Body).Decode(credentials); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch user by email
+	user, err := models.GetUserByEmail(credentials.Email)
+	if err != nil {
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
+
+	// Validate password
+	if !utils.ValidatePassword(user.PasswordHash, credentials.Password) {
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
 }

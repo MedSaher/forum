@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"forum/app/config"
 )
 
 // Vote represents the user vote (like or dislike)
@@ -16,7 +17,7 @@ type Vote struct {
 
 // CreateVote inserts a new vote into the database
 func CreateVote(userID, postID, commentID, value int) error {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return err
 	}
@@ -31,7 +32,7 @@ func CreateVote(userID, postID, commentID, value int) error {
 
 // GetAllVotes retrieves all votes from the database
 func GetAllVotes() ([]*Vote, error) {
-	db, err := Connection()
+	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
