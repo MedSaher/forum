@@ -203,13 +203,12 @@
         const loginFormElement = document.getElementById('loginFormElement');
         loginFormElement.addEventListener('submit', async function (e) {
             e.preventDefault();
-            clearErrors();
-
+            //  clearErrors();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
 
             let isValid = true;
-
+            
             if (!isValidEmail(email)) {
                 showError('loginEmailError', 'Please enter a valid email address');
                 isValid = false;
@@ -221,6 +220,10 @@
             }
 
             if (isValid) {
+                const loginData = {
+                    email: email,
+                    password: password
+                };
                 try {
                     const response = await fetch('/login', {
                         method: 'POST',
@@ -228,21 +231,37 @@
                             'Content-Type': 'application/json',
                         },
                         credentials: 'include', // Ensures cookies (e.g., CSRF tokens) are sent with the request
-                        body: JSON.stringify({ email, password })
+                        body: JSON.stringify(loginData)
                     });
 
                     if (response.ok) {
-                        window.location.href = '/dashboard'; // Redirect to dashboard
+                        window.location.href = '/'; // Redirect to dashboard
                     } else {
-                        showError('loginEmailError', 'Invalid credentials');
+                        const errorText = await response.text();
+                        showError('HERE: ', errorText);
+                        // showError('loginEmailError', response.text);
                     }
                 } catch (error) {
-                    showError('loginEmailError', 'An error occurred. Please try again later.');
+                    console.error('The error happened here:', error.message);  // Use error.message instead of error.text
+                    showError('ERROR: ', error.message);
+                    // showError('loginEmailError', error.text);
                 }
             }
         });
 
+        // Use the regex to check the validation of the email:
+        function isValidEmail(email) {
+            // Regular expression to match a valid email pattern
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+            return emailRegex.test(email);
+        }
+
+        // show if any error:
+        function showError(element, errorMessage) {
+            // For now, use an alert to show the error
+            alert(element + errorMessage);
+        }
     </script>
 </body>
 

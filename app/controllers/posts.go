@@ -23,3 +23,8 @@ func GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
 }
+
+// Test:
+func PostsHandler(w http.ResponseWriter, r *http.Request) {
+	Tmpl.ExecuteTemplate(w, "posts.html", nil)
+}

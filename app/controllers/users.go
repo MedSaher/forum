@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -9,7 +10,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"forum/app/middleware"
 	"forum/app/models"
 	"forum/app/utils"
 )
@@ -174,22 +177,49 @@ func isAllowedFileType(filename string) bool {
 // Create a login handler:
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	credentials := &Credentials{}
+	fmt.Println(credentials)
 	// Parse request body
 	if err := json.NewDecoder(r.Body).Decode(credentials); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-
+	fmt.Println(credentials)
 	// Fetch user by email
 	user, err := models.GetUserByEmail(credentials.Email)
 	if err != nil {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
-
+	fmt.Println(user)
 	// Validate password
 	if !utils.ValidatePassword(user.PasswordHash, credentials.Password) {
-		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		http.Error(w, "error password", http.StatusUnauthorized)
 		return
 	}
+
+	// Instantiate anew session:
+	session, err := middleware.CreateSession(user.ID, 4*time.Hour)
+	if err != nil {
+		http.Error(w, "Failure during session creation", http.StatusInternalServerError)
+		return
+	}
+
+	// Set session coockies:
+	// Set session cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    session.UUID,
+		Expires:  session.ExpiresAt,
+		HttpOnly: true,
+		Secure:   true, // Use https
+	})
+	
+
+	log.Println("User successfully loged in.")
+	response := map[string]string{
+		"message":   "User loged in successfully",
+		"user_name": user.FirstName,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response) // Return success response in JSON format.
 }

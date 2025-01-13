@@ -156,7 +156,7 @@ func GetUserByEmail(email string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	query := "SELECT * FROM User WHERE email = ?"
+	query := "SELECT * FROM User WHERE email = ? "
 	err = db.QueryRow(query, email).Scan(user.ID, user.FirstName, user.LastName, user.Email, user.PasswordHash, user.ProfilePicture)
 	if err != nil {
 		if err == sql.ErrNoRows {

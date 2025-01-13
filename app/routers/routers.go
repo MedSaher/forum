@@ -36,8 +36,9 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // Create a new handler:
 func (router *Router) RouteHandler() {
-	router.AddRoute("/", controllers.RegisterUserHandler)
-	router.AddRoute("/user", controllers.GetAllUsersHandler)
-	router.AddRoute("/post/categories", controllers.GetAllCategories)
+	// router.AddRoute("/", controllers.PostsHandler)
+	// router.AddRoute("/user", controllers.GetAllUsersHandler)
+	// router.AddRoute("/categories", controllers.GetAllCategories)
 	router.AddRoute("/register", controllers.RegisterUserHandler)
+	router.AddRoute("/login", controllers.LoginHandler)
 }
