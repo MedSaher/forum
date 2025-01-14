@@ -151,18 +151,19 @@ func CheckEmailExists(email string) (bool, error) {
 
 // Login and credentials validation validition:
 func GetUserByEmail(email string) (*User, error) {
-	var user User
+	user := &User{}
 	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(email)
 	query := "SELECT * FROM User WHERE email = ? "
-	err = db.QueryRow(query, email).Scan(user.ID, user.FirstName, user.LastName, user.Email, user.PasswordHash, user.ProfilePicture)
+	err = db.QueryRow(query, email).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash, &user.ProfilePicture)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("user not found")
 		}
 		return nil, err
 	}
-	return &user, nil
+	return user, nil
 }

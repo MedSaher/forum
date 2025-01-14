@@ -174,52 +174,57 @@ func isAllowedFileType(filename string) bool {
 	return validTypes[ext]
 }
 
-// Create a login handler:
+// LoginHandler handles user login requests
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	credentials := &Credentials{}
-	fmt.Println(credentials)
-	// Parse request body
+
+	// Parse the JSON request body
 	if err := json.NewDecoder(r.Body).Decode(credentials); err != nil {
+		fmt.Println("Error decoding credentials.")
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 	fmt.Println(credentials)
+	// Normalize email case for consistent lookup
+	fmt.Println(credentials.Email)
 	// Fetch user by email
 	user, err := models.GetUserByEmail(credentials.Email)
 	if err != nil {
-		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		fmt.Println("Error with email")
+		http.Error(w, "Invalid email or password: "+err.Error(), http.StatusUnauthorized)
 		return
 	}
 	fmt.Println(user)
 	// Validate password
 	if !utils.ValidatePassword(user.PasswordHash, credentials.Password) {
-		http.Error(w, "error password", http.StatusUnauthorized)
+		fmt.Println("Error with password")
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
-	// Instantiate anew session:
-	session, err := middleware.CreateSession(user.ID, 4*time.Hour)
+	// Create a new session for the user
+	session, err := middleware.CreateSession(user.ID, 24*time.Hour)
 	if err != nil {
-		http.Error(w, "Failure during session creation", http.StatusInternalServerError)
+		fmt.Println("error: session creation.")
+		http.Error(w, "Failed to create session", http.StatusInternalServerError)
 		return
 	}
 
-	// Set session coockies:
-	// Set session cookie
+	// Set a secure session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    session.UUID,
 		Expires:  session.ExpiresAt,
-		HttpOnly: true,
-		Secure:   true, // Use https
+		HttpOnly: true,         // Prevent JavaScript access
+		Secure:   r.TLS != nil, // Enforce HTTPS
+		Path:     "/posts",          // Apply cookie site-wide
 	})
-	
 
-	log.Println("User successfully loged in.")
+	// Respond with a success message
 	response := map[string]string{
-		"message":   "User loged in successfully",
+		"message":   "User logged in successfully",
 		"user_name": user.FirstName,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response) // Return success response in JSON format.
+	json.NewEncoder(w).Encode(response)
 }

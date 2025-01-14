@@ -26,5 +26,8 @@ func GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 // Test:
 func PostsHandler(w http.ResponseWriter, r *http.Request) {
-	Tmpl.ExecuteTemplate(w, "posts.html", nil)
+	if err := Tmpl.ExecuteTemplate(w, "posts.html", nil); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
