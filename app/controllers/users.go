@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"forum/app/middleware"
 	"forum/app/models"
 	"forum/app/utils"
 )
@@ -203,7 +202,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a new session for the user
-	session, err := middleware.CreateSession(user.ID, 24*time.Hour)
+	session, err := CreateSession(user.ID, 24*time.Hour)
 	if err != nil {
 		fmt.Println("error: session creation.")
 		http.Error(w, "Failed to create session", http.StatusInternalServerError)
@@ -217,7 +216,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  session.ExpiresAt,
 		HttpOnly: true,         // Prevent JavaScript access
 		Secure:   r.TLS != nil, // Enforce HTTPS
-		Path:     "/posts",          // Apply cookie site-wide
+		Path:     "/posts",     // Apply cookie site-wide
 	})
 
 	// Respond with a success message
