@@ -19,6 +19,7 @@ func GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	
 	// Respond with JSON
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)

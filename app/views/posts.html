@@ -1,14 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>posts</title>
+    <title>Forum Dashboard</title>
+    <link rel="stylesheet" href="/app/static/css/posts.css">
 </head>
-
 <body>
-   <h1>Welcome in forum!!!</h1>
-</body>
+    <nav class="navbar">
+        <div class="navbar-brand">Forum</div>
+        <div class="nav-links">
+            <a href="/forum" class="nav-link">Home</a>
+            <a href="/categories" class="nav-link">Categories</a>
+            <a href="/members" class="nav-link">Members</a>
+            <div class="user-profile">
+                <img src="/api/placeholder/40/40" alt="Profile Picture" id="navProfilePic">
+                <span id="navUserName">John Doe</span>
+                <button class="btn btn-small" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
 
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="card-title">Categories</div>
+            <ul class="category-list">
+                <li class="category-item">General Discussion <span class="badge">15</span></li>
+                <li class="category-item">Announcements <span class="badge">3</span></li>
+                <li class="category-item">Help & Support <span class="badge">7</span></li>
+                <li class="category-item">Feature Requests <span class="badge">12</span></li>
+                <li class="category-item">Introductions <span class="badge">5</span></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <!-- <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="threadCount">25</div>
+                    <div class="stat-label">Threads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="replyCount">148</div>
+                    <div class="stat-label">Replies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="memberCount">534</div>
+                    <div class="stat-label">Members</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Recent Threads
+                    <a href="/new-thread" class="btn btn-small">New Thread</a>
+                </div>
+                <div class="thread-list" id="recentThreads">
+                    <!-- Thread items will be populated by JavaScript -->
+                <!-- </div> -->
+            <!-- </div> --> 
+            <div class="card">
+                <div class="card-title">Your Recent Activity</div>
+                <div class="thread-list" id="userActivity">
+                    <!-- User activity will be populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
 </html>

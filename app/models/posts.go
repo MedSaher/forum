@@ -47,7 +47,7 @@ func GetAllPosts() ([]*Post, error) {
 	var Posts []*Post
 	for rows.Next() {
 		post := &Post{}
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.LikeCount, &post.DislikeCount); err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Timestamp, &post.LikeCount, &post.DislikeCount); err != nil {
 			return nil, err
 		}
 		Posts = append(Posts, post)

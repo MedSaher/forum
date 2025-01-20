@@ -3,83 +3,66 @@ package routers
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 
 	"forum/app/controllers"
 )
 
-// Middleware defines a function type that wraps an http.HandlerFunc.
-// It allows adding pre- or post-processing logic around the original handler.
-type Middleware func(http.HandlerFunc) http.HandlerFunc
+// HandlerFunc defines the type for handler functions
+type HandlerFunc func(http.ResponseWriter, *http.Request)
 
-// Route represents an individual route in the application.
-type Route struct {
-	Method  string           // The HTTP method required for the route (e.g., "GET", "POST").
-	Handler http.HandlerFunc // The function to execute when the route is matched.
-}
-
-// Router manages all routes for the application.
+// Router stores routes and their corresponding handlers
 type Router struct {
-	Routes map[string]*Route // A map of paths to their corresponding Route.
+	routes      map[string]HandlerFunc
+	staticPaths map[string]string // Map of URL paths to file directories
 }
 
-// Intantiate a new route:
-func newRoute(method string, handler http.HandlerFunc) *Route {
-	route := new(Route)
-	route.Method = method
-	route.Handler = handler
-	return route
-}
-
-// Instantiate a new router:
+// NewRouter initializes a new Router
 func NewRouter() *Router {
-	router := new(Router)
-	// mapping all routes where the key is the path and the value is a the route:
-	// key: /path  value: route(method->handler);
-	router.Routes = make(map[string]*Route)
-	return router
-}
-
-// AddRoute adds a new route to the router with optional middleware.
-// Parameters:
-// - path: The URL path to match (e.g., "/login").
-// - method: The HTTP method required (e.g., "GET", "POST").
-// - handler: The function to execute for the route.
-// - middlewares: A variadic argument allowing multiple middleware to be applied.
-func (router *Router) AddRoute(path, method string, handler http.HandlerFunc, middlewares ...Middleware) {
-	for _, middleware := range middlewares {
-		handler = middleware(handler)
+	return &Router{
+		routes:      make(map[string]HandlerFunc),
+		staticPaths: make(map[string]string),
 	}
-	router.Routes[path] = newRoute(method, handler)
 }
 
-func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	route, exists := router.Routes[req.URL.Path]
-	if exists && route.Method == req.Method {
-		defer func() {
-			if r := recover(); r != nil {
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			}
-		}()
-		route.Handler(w, req)
+// AddRoute registers a new route with a handler
+func (r *Router) AddRoute(method, path string, handler HandlerFunc) {
+	key := fmt.Sprintf("%s:%s", method, path)
+	r.routes[key] = handler
+}
+
+// AddStaticRoute registers a directory to serve static files
+func (r *Router) AddStaticRoute(urlPath, dirPath string) {
+	r.staticPaths[urlPath] = dirPath
+}
+
+// ServeHTTP matches requests to routes and serves files or calls handlers
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// Check for static files first
+	for urlPath, dirPath := range r.staticPaths {
+		if req.URL.Path == urlPath || filepath.HasPrefix(req.URL.Path, urlPath+"/") {
+			filePath := filepath.Join(dirPath, req.URL.Path[len(urlPath):])
+			http.ServeFile(w, req, filePath)
+			return
+		}
+	}
+
+	// Check for dynamic routes
+	key := fmt.Sprintf("%s:%s", req.Method, req.URL.Path)
+	if handler, exists := r.routes[key]; exists {
+		handler(w, req)
 	} else {
-		http.NotFound(w, req)
+		http.NotFound(w, req) // Return 404 if route is not found
 	}
 }
 
-func (router *Router) AddStaticRoute(path, dir string) {
-	fs := http.FileServer(http.Dir(dir))
-	router.Routes[path] =  newRoute("GET" ,http.StripPrefix(path, fs).ServeHTTP)
-}
-
-func (router *Router) ListRoutes() {
-	for path, route := range router.Routes {
-		fmt.Printf("Path: %s, Method: %s\n", path, route.Method)
-	}
-}
-
+// RouteHandler adds routes to the router.
 func (router *Router) RouteHandler() {
-	router.AddRoute("/", "GET", controllers.RegisterUserHandler)
-	router.AddRoute("/login", "POST", controllers.LoginHandler)
-	router.AddRoute("/posts", "GET", controllers.PostsHandler)
+	router.AddRoute("POST", "/register", controllers.RegisterUserHandler)
+	router.AddRoute("GET", "/register", controllers.RegisterUserHandler)
+	router.AddRoute("POST", "/login", controllers.LoginHandler)
+	router.AddRoute("POST", "/posts", controllers.PostsHandler)
+	router.AddRoute("GET", "/", controllers.PostsHandler);
+	router.AddRoute("GET", "/all_posts", controllers.GetAllPostsHandler)
 	// Add other routes as needed
 }

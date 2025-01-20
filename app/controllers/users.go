@@ -43,12 +43,14 @@ func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 // Register a new user to my app:
 func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Happened")
+	fmt.Println(r.Method)
 	// Check if the request is a GET request. If so, render the form for user registration.
 	if r.Method == http.MethodGet {
 		Tmpl.ExecuteTemplate(w, "user.html", nil)
 		return
 	}
-
+	
 	// Parse the multipart form with a maximum memory of 10MB for uploaded files.
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
@@ -140,7 +142,7 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		PasswordHash:   string(hashedPassword), // Save the hashed password.
 		ProfilePicture: handler.Filename,       // Store the file's relative path.
 	}
-
+	fmt.Println(user)
 	// Log the user data for debugging purposes.
 	log.Printf("Attempting to save user: %+v", user)
 
