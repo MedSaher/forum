@@ -87,7 +87,7 @@ loginFormElement.addEventListener('submit', async function (e) {
 
             if (response.ok) {
                 // Redirect to the dashboard on successful login
-                window.location.href = '/all_posts';
+                window.location.href = '/';
             } else {
                 // Display error message from the server
                 const errorText = await response.text();

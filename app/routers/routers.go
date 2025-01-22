@@ -57,12 +57,21 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // RouteHandler adds routes to the router.
-func (router *Router) RouteHandler() {
+func (router *Router) MiddleWare() {
 	router.AddRoute("POST", "/register", controllers.RegisterUserHandler)
 	router.AddRoute("GET", "/register", controllers.RegisterUserHandler)
 	router.AddRoute("POST", "/login", controllers.LoginHandler)
-	router.AddRoute("POST", "/posts", controllers.PostsHandler)
-	router.AddRoute("GET", "/", controllers.PostsHandler);
+	router.AddRoute("GET", "/login", controllers.LoginHandler)
+	router.AddRoute("GET", "/", controllers.PostsHandler)
 	router.AddRoute("GET", "/all_posts", controllers.GetAllPostsHandler)
+	router.AddRoute("GET", "/all_categories", controllers.GetAllCategories)
 	// Add other routes as needed
+}
+
+// Add a middleware for static files:
+func (router *Router) StaticMiddleWare() {
+	// Serve css static files:
+	router.AddStaticRoute("/app/static/css", "./app/static/css")
+	// Serve js static files:
+	router.AddStaticRoute("/app/static/scripts", "./app/static/scripts")
 }

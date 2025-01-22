@@ -19,12 +19,10 @@ func main() {
 	}
 	// create a new instance of the router:
 	router := routers.NewRouter()
-	// Serve css static files:
-	router.AddStaticRoute("/app/static/css", "./app/static/css")
-	// Serve js static files:
-	router.AddStaticRoute("/app/static/scripts", "./app/static/scripts")
+	// handle static files:
+	router.StaticMiddleWare()
 	// Map the routs the specific handler
-	router.RouteHandler()
+	router.MiddleWare()
 
 	fmt.Println("run: http://localhost:8080/")
 	log.Fatal(http.ListenAndServe(":8080", router))

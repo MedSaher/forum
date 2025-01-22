@@ -50,7 +50,7 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		Tmpl.ExecuteTemplate(w, "user.html", nil)
 		return
 	}
-	
+
 	// Parse the multipart form with a maximum memory of 10MB for uploaded files.
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
@@ -177,8 +177,12 @@ func isAllowedFileType(filename string) bool {
 
 // LoginHandler handles user login requests
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if the request is a GET request. If so, render the form for user registration.
+	if r.Method == http.MethodGet {
+		Tmpl.ExecuteTemplate(w, "user.html", nil)
+		return
+	}
 	credentials := &Credentials{}
-
 	// Parse the JSON request body
 	if err := json.NewDecoder(r.Body).Decode(credentials); err != nil {
 		fmt.Println("Error decoding credentials.")

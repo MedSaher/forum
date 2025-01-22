@@ -16,55 +16,26 @@
             <div class="user-profile">
                 <img src="/api/placeholder/40/40" alt="Profile Picture" id="navProfilePic">
                 <span id="navUserName">John Doe</span>
-                <button class="btn btn-small" onclick="logout()">Logout</button>
+                <button id="login_btn">login</button>
             </div>
         </div>
     </nav>
 
     <div class="dashboard-container">
-        <aside class="sidebar">
+        <aside id="sidebar">
             <div class="card-title">Categories</div>
-            <ul class="category-list">
+            <!-- <ul class="category-list">
                 <li class="category-item">General Discussion <span class="badge">15</span></li>
                 <li class="category-item">Announcements <span class="badge">3</span></li>
                 <li class="category-item">Help & Support <span class="badge">7</span></li>
                 <li class="category-item">Feature Requests <span class="badge">12</span></li>
                 <li class="category-item">Introductions <span class="badge">5</span></li>
-            </ul>
+            </ul> -->
         </aside>
-
-        <main class="main-content">
-            <!-- <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="threadCount">25</div>
-                    <div class="stat-label">Threads</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="replyCount">148</div>
-                    <div class="stat-label">Replies</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="memberCount">534</div>
-                    <div class="stat-label">Members</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">
-                    Recent Threads
-                    <a href="/new-thread" class="btn btn-small">New Thread</a>
-                </div>
-                <div class="thread-list" id="recentThreads">
-                    <!-- Thread items will be populated by JavaScript -->
-                <!-- </div> -->
-            <!-- </div> --> 
-            <div class="card">
-                <div class="card-title">Your Recent Activity</div>
-                <div class="thread-list" id="userActivity">
-                    <!-- User activity will be populated by JavaScript -->
-                </div>
-            </div>
+        <main id="main-content">
+            <!-- The content will be filled dynamically! -->
         </main>
+        <script src="/app/static/scripts/posts.js"></script>
     </div>
 </body>
 </html>
