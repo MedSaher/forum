@@ -1,14 +1,17 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 
+	"forum/app/config"
 	"forum/app/controllers"
 	"forum/app/routers"
 )
+
 
 func main() {
 	// Parse the static files:
@@ -17,6 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	
 	// create a new instance of the router:
 	router := routers.NewRouter()
 	// handle static files:

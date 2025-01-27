@@ -1,11 +1,13 @@
 package routers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"path/filepath"
 
 	"forum/app/controllers"
+	"forum/app/models"
 )
 
 // HandlerFunc defines the type for handler functions
@@ -38,6 +40,7 @@ func (r *Router) AddStaticRoute(urlPath, dirPath string) {
 
 // ServeHTTP matches requests to routes and serves files or calls handlers
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	
 	// Check for static files first
 	for urlPath, dirPath := range r.staticPaths {
 		if req.URL.Path == urlPath || filepath.HasPrefix(req.URL.Path, urlPath+"/") {
@@ -65,7 +68,7 @@ func (router *Router) MiddleWare() {
 	router.AddRoute("GET", "/", controllers.PostsHandler)
 	router.AddRoute("GET", "/all_posts", controllers.GetAllPostsHandler)
 	router.AddRoute("GET", "/all_categories", controllers.GetAllCategories)
-	// Add other routes as needed
+	router.AddRoute("GET", "/profile", controllers.LogedInUser)
 }
 
 // Add a middleware for static files:
@@ -74,4 +77,30 @@ func (router *Router) StaticMiddleWare() {
 	router.AddStaticRoute("/app/static/css", "./app/static/css")
 	// Serve js static files:
 	router.AddStaticRoute("/app/static/scripts", "./app/static/scripts")
+}
+
+// Create a session middleware in case of the abcence of login the program will force the user to log in:
+func SessionMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get the session UUID from the cookie
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		// Validate the session from the database
+		userID, err := models.GetSessionByUUID(cookie.Value)
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		// Add the userID to the request context
+		ctx := context.WithValue(r.Context(), "UserID", userID)
+		r = r.WithContext(ctx)
+
+		// Call the next handler
+		next.ServeHTTP(w, r)
+	})
 }

@@ -1,6 +1,9 @@
 package models
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"time"
 
 	"forum/app/config"
@@ -39,13 +42,33 @@ func UpdateSession(id int, newExpiresAt time.Time) error {
 	return err
 }
 
-// Delete a session:
-func DeleteSession(id int) error {
+// Get session based on univeral unique id:
+// Get session based on universal unique id:
+func GetSessionByUUID(uuid string) (*Session, error) {
+	db, err := config.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	var session = &Session{}
+	// Ensure we pass the address of each field, so the values can be scanned correctly
+	err = db.QueryRow("SELECT ID, UserID, UUID, ExpiresAt FROM Session WHERE UUID = ?", uuid).
+		Scan(&session.ID, &session.UserID, &session.UUID, &session.ExpiresAt)  // Use & to pass the address of each field
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("session not found")
+		}
+		return nil, err
+	}
+	fmt.Println(session)  // You can log the session to verify it's correct
+	return session, nil
+}
+
+// Delete session whe log_out:
+func DeleteSession(uuid string) error {
 	db, err := config.InitDB()
 	if err != nil {
 		return err
 	}
-	query := `DELETE FROM Session WHERE ID = ?;`
-	_, err = db.Exec(query, id)
+	_, err = db.Exec("DELETE FROM Session WHERE UUID = ?", uuid)
 	return err
 }

@@ -4,15 +4,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         // Redirect to the dashboard on successful login
         window.location.href = '/register';
     });
-
-    // <ul class="category-list">
-    //     <li class="category-item">General Discussion <span class="badge">15</span></li>
-    //     <li class="category-item">Announcements <span class="badge">3</span></li>
-    //     <li class="category-item">Help & Support <span class="badge">7</span></li>
-    //     <li class="category-item">Feature Requests <span class="badge">12</span></li>
-    //     <li class="category-item">Introductions <span class="badge">5</span></li>
-    // </ul>
-
     // Fetch all existing categories:
     const side_bar = document.getElementById("sidebar")
     let category_list = document.createElement("ul")
@@ -54,5 +45,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
     } catch (error) {
         console.error('Error:', error);
+    }
+
+    // Fetch the loged in user based on the session:
+    try {
+        const response = await fetch('http://localhost:8080/profile');
+        const user = await response.json();
+        console.log(user)
+    } catch (error) {
+        console.error('Error !!!:', error);
     }
 });

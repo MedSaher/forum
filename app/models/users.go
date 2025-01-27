@@ -167,3 +167,12 @@ func GetUserByEmail(email string) (*User, error) {
 	}
 	return user, nil
 }
+
+// Get user based on the session tocken:
+func GetUserByTocken(tocken string)(*User, error){
+	db, err := config.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	query := "SELECT"
+}

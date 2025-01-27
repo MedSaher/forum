@@ -189,9 +189,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	fmt.Println(credentials)
-	// Normalize email case for consistent lookup
-	fmt.Println(credentials.Email)
 	// Fetch user by email
 	user, err := models.GetUserByEmail(credentials.Email)
 	if err != nil {
@@ -199,7 +196,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid email or password: "+err.Error(), http.StatusUnauthorized)
 		return
 	}
-	fmt.Println(user)
 	// Validate password
 	if !utils.ValidatePassword(user.PasswordHash, credentials.Password) {
 		fmt.Println("Error with password")
@@ -222,7 +218,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  session.ExpiresAt,
 		HttpOnly: true,         // Prevent JavaScript access
 		Secure:   r.TLS != nil, // Enforce HTTPS
-		Path:     "/posts",     // Apply cookie site-wide
+		Path:     "/",     // Apply cookie site-wide
 	})
 
 	// Respond with a success message
@@ -232,4 +228,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+// Get loged in user:
+func GetUserByTocken(wr http.ResponseWriter, rq *http.Request) {
+	
 }
