@@ -230,7 +230,38 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Get loged in user:
-func GetUserByTocken(wr http.ResponseWriter, rq *http.Request) {
-	
+
+// Extract the loged in user:
+func LogedInUser(wr http.ResponseWriter, rq *http.Request) {
+	cookie, err := rq.Cookie("session_token")
+	if err != nil {
+		// Handle error (e.g., cookie not found)
+		wr.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(wr).Encode(nil)
+		fmt.Println("Error:", err)
+		return
+	}
+	session, er := models.GetSessionByUUID(cookie.Value)
+	if er != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println(session.UUID)
+	uuid := session.UUID
+	user, Err := models.GetUserByTocken(uuid)
+	if Err != nil {
+		fmt.Println("Error:", Err)
+		return
+	}
+
+	// Respond with a success message
+	response := map[string]string{
+		"message":     "User logged in successfully",
+		"first_name":  user.FirstName,
+		"last_name":   user.LastName,
+		"profile_pic": user.ProfilePicture,
+	}
+	wr.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(wr).Encode(response)
 }
+

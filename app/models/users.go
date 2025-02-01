@@ -169,10 +169,16 @@ func GetUserByEmail(email string) (*User, error) {
 }
 
 // Get user based on the session tocken:
-func GetUserByTocken(tocken string)(*User, error){
+func GetUserByTocken(tocken string) (*User, error) {
+	user := &User{}
 	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
-	query := "SELECT"
+	query := "SELECT User.ID, FirstName, LastName, Email, PasswordHash, ProfilePicture FROM User INNER JOIN Session ON Session.UserId = User.Id WHERE Session.UUID = ?"
+	err = db.QueryRow(query, tocken).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash, &user.ProfilePicture)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

@@ -28,20 +28,24 @@ func CreateSession(userId int, expiration time.Duration) (*models.Session, error
 	return session, nil
 }
 
-// Extract the loged in user:
-func LogedInUser(wr http.ResponseWriter, rq *http.Request) {
-    cookie, err := rq.Cookie("session_token")
-    if err != nil {
-        // Handle error (e.g., cookie not found)
-        fmt.Println("Error:", err)
+// Logout and kill the session:
+func Logout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+        http.Error(w, "No active session", http.StatusBadRequest)
         return
     }
-	session, er := models.GetSessionByUUID(cookie.Value)
-	if er != nil {
-		fmt.Println("Error:", err)
-        return
-	}
-    fmt.Println(session.UUID)
-	uuid := session.UUID
-	
+	fmt.Println(cookie)
+    // Expire the cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "session_token",
+        Value:    "",
+        MaxAge:   -1,
+        HttpOnly: true,
+        Path:     "/",
+    })
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message": "Logged out successfully"}`))
 }
+

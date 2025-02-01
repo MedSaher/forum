@@ -69,6 +69,7 @@ func (router *Router) MiddleWare() {
 	router.AddRoute("GET", "/all_posts", controllers.GetAllPostsHandler)
 	router.AddRoute("GET", "/all_categories", controllers.GetAllCategories)
 	router.AddRoute("GET", "/profile", controllers.LogedInUser)
+	router.AddRoute("POST", "/logout", controllers.Logout)
 }
 
 // Add a middleware for static files:
@@ -77,6 +78,8 @@ func (router *Router) StaticMiddleWare() {
 	router.AddStaticRoute("/app/static/css", "./app/static/css")
 	// Serve js static files:
 	router.AddStaticRoute("/app/static/scripts", "./app/static/scripts")
+	// serve pictures:
+	router.AddStaticRoute("/app/uploads", "./app/uploads")
 }
 
 // Create a session middleware in case of the abcence of login the program will force the user to log in:

@@ -48,13 +48,13 @@ body {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-.user-profile {
+#user-profile {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.user-profile img {
+#user-profile img {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -127,6 +127,21 @@ body {
     display: inline-block;
 }
 
+#logout_btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+#logout_btn:hover {
+    background-color: #3451d1;
+}
 #login_btn:hover {
     background-color: #3451d1;
 }
