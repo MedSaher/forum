@@ -1,13 +1,11 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 
-	"forum/app/config"
 	"forum/app/controllers"
 	"forum/app/routers"
 )

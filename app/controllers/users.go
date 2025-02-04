@@ -246,7 +246,7 @@ func LogedInUser(wr http.ResponseWriter, rq *http.Request) {
 		fmt.Println("Error:", err)
 		return
 	}
-	fmt.Println(session.UUID)
+	// fmt.Println(session.UUID)
 	uuid := session.UUID
 	user, Err := models.GetUserByTocken(uuid)
 	if Err != nil {

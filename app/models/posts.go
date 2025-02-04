@@ -15,7 +15,7 @@ type Post struct {
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new Post:
-func CreatePost(title, content string, authorId string) error {
+func CreatePost(title, content string, authorId int) error {
 	db, err := config.InitDB()
 	if err != nil {
 		return err
@@ -54,3 +54,4 @@ func GetAllPosts() ([]*Post, error) {
 	}
 	return Posts, nil
 }
+

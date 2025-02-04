@@ -42,7 +42,10 @@ body {
     border-radius: 4px;
     font-size: 1rem;
     box-sizing: border-box;
+    max-width: 100%;
+    min-width: 100%;
 }
+
 
 .btn {
     width: 100%;

@@ -70,6 +70,8 @@ func (router *Router) MiddleWare() {
 	router.AddRoute("GET", "/all_categories", controllers.GetAllCategories)
 	router.AddRoute("GET", "/profile", controllers.LogedInUser)
 	router.AddRoute("POST", "/logout", controllers.Logout)
+	router.AddRoute("GET", "/add_post", controllers.AddPost)
+	router.AddRoute("POST", "/add_post", controllers.AddPost)
 }
 
 // Add a middleware for static files:
