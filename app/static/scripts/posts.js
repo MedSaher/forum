@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", async function () {
     let user_profile = document.getElementById("user-profile");
-
     // Fetch the logged-in user based on the session
     const profile_img = document.createElement("img");
     const nameSpan = document.createElement("span");
@@ -12,6 +11,12 @@ document.addEventListener("DOMContentLoaded", async function () {
         console.log(user);
 
         if (user) {
+            // add a create header:
+            let link_to = document.createElement("a")
+            link_to.className = "nav-link"
+            link_to.textContent = "Create post"
+            link_to.href = "/add_post"
+            user_profile.appendChild(link_to)
             // Handle the profile image
             profile_img.src = "./app/uploads/" + user.profile_pic;
             profile_img.alt = "Profile Picture";

@@ -30,7 +30,7 @@ body {
     font-weight: bold;
 }
 
-.nav-links {
+#nav-links {
     display: flex;
     gap: 2rem;
     align-items: center;
@@ -209,7 +209,7 @@ body {
         grid-template-columns: 1fr;
     }
 
-    .nav-links {
+    #nav-links {
         display: none;
     }
 }
