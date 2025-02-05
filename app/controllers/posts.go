@@ -55,7 +55,9 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 		return
 	}
 	title := rq.FormValue("post_title")
-	content :=  rq.FormValue("post_content")
+	content := rq.FormValue("post_content")
+	category := rq.FormValue("chosen_category")
+	fmt.Println(category)
 	session, er := models.GetSessionByUUID(cookie.Value)
 	if er != nil {
 		fmt.Println("Error:", err)
@@ -69,17 +71,26 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 	}
 	fmt.Println(user)
 	// Create the post in the database:
-	err = models.CreatePost(title, content, user.ID)
+	post_id, err := models.CreatePost(title, content, user.ID)
 	if err != nil {
-		fmt.Println("Error:", Err)
+		fmt.Println("Error:", er)
+		return
+	}
+	fmt.Println(post_id)
+	category_id, er := models.GetCategoryById(category)
+	if er != nil {
+		fmt.Println("Error:", er)
+		return
+	}
+	// link the new inserted post to its category in database:
+	if err := models.LinkPostToCategory(post_id, category_id); err != nil {
+		fmt.Println("Error:", er)
 		return
 	}
 	// Respond with a success message
 	response := map[string]string{
 		"message": "User logged in successfully",
-		"status":  "ok",
 	}
-
 	wr.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(wr).Encode(response)
 }

@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+
 	"forum/app/config"
 )
 
@@ -34,11 +35,44 @@ func GetAllCategories() ([]*Category, error) {
 		}
 		categories = append(categories, category)
 	}
-
 	// Check for any errors encountered during iteration
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating through rows: %w", err)
 	}
-
 	return categories, nil
+}
+
+// Extract the category id:
+func GetCategoryById(category string) (int, error) {
+	db, err := config.InitDB()
+	if err != nil {
+		return -1, err
+	}
+	var id int
+	query := "SELECT ID FROM Category where Name = ?"
+
+	err = db.QueryRow(query, category).Scan(&id)
+	if err != nil {
+		return -1, err
+	}
+	return id, nil
+}
+
+// Link a new inserted post to its category:
+func LinkPostToCategory(postId, categoryId int) error {
+	db, err := config.InitDB()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	query := `INSERT INTO PostCategory (PostID, CategoryID)
+	          VALUES (?, ?)`
+
+	// Execute the query and get the result
+	_, er := db.Exec(query, postId, categoryId)
+	if er != nil {
+		return er
+	}
+	return nil
 }

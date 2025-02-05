@@ -15,22 +15,28 @@ type Post struct {
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new Post:
-func CreatePost(title, content string, authorId int) error {
+func CreatePost(title, content string, authorId int) (int, error) {
 	db, err := config.InitDB()
 	if err != nil {
-		return err
+		return -1, err
 	}
 	defer db.Close()
 	query := `INSERT INTO Post (Title, Content, AuthorId)
           VALUES (?, ?, ?)`
-	_, err = db.Exec(query, title, content, authorId)
-	if err != nil {
-		return err
+	result, Err := db.Exec(query, title, content, authorId)
+	if Err != nil {
+		return -1, err
 	}
-	return nil
+
+	// Get the last inserted ID
+	lastID, er := result.LastInsertId()
+	if er != nil {
+		return -1, err
+	}
+	return int(lastID), nil
 }
 
-// Fetch all Posts
+// Fetch all Posts:
 func GetAllPosts() ([]*Post, error) {
 	db, err := config.InitDB()
 	if err != nil {
@@ -54,4 +60,3 @@ func GetAllPosts() ([]*Post, error) {
 	}
 	return Posts, nil
 }
-

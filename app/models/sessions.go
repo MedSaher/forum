@@ -42,7 +42,6 @@ func UpdateSession(id int, newExpiresAt time.Time) error {
 	return err
 }
 
-// Get session based on univeral unique id:
 // Get session based on universal unique id:
 func GetSessionByUUID(uuid string) (*Session, error) {
 	db, err := config.InitDB()
