@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"forum/app/controllers"
 	"forum/app/models"
@@ -40,11 +41,22 @@ func (r *Router) AddStaticRoute(urlPath, dirPath string) {
 
 // ServeHTTP matches requests to routes and serves files or calls handlers
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	
 	// Check for static files first
 	for urlPath, dirPath := range r.staticPaths {
-		if req.URL.Path == urlPath || filepath.HasPrefix(req.URL.Path, urlPath+"/") {
+		// Check if the request URL path starts with the static path
+		if strings.HasPrefix(req.URL.Path, urlPath+"/") || req.URL.Path == urlPath {
+			// Safely join the directory path with the file path
 			filePath := filepath.Join(dirPath, req.URL.Path[len(urlPath):])
+			// Normalize the file path
+			filePath = filepath.Clean(filePath)
+
+			// Ensure it's not a directory traversal attack
+			if strings.Contains(filePath, "..") {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+
+			// Serve the static file
 			http.ServeFile(w, req, filePath)
 			return
 		}
@@ -72,6 +84,7 @@ func (router *Router) MiddleWare() {
 	router.AddRoute("POST", "/logout", controllers.Logout)
 	router.AddRoute("GET", "/add_post", controllers.AddPost)
 	router.AddRoute("POST", "/add_post", controllers.AddPost)
+	router.AddRoute("POST", "/vote", controllers.CreateVote)
 }
 
 // Add a middleware for static files:

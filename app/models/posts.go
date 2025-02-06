@@ -1,6 +1,8 @@
 package models
 
-import "forum/app/config"
+import (
+	"forum/app/config"
+)
 
 // Declare a model to represent the Post and ease data exchange between backend and frontend:
 type Post struct {
@@ -11,6 +13,18 @@ type Post struct {
 	Timestamp    string `json:"time"`
 	LikeCount    int    `json:"likeCount"`
 	DislikeCount int    `json:"dislikeCount"`
+}
+
+
+type NeededPost struct {
+	ID           int    `json:"id"`
+	Title        string `json:"title"`
+	Content      string `json:"content"`
+	AuthorID     int    `json:"authorId"`
+	Timestamp    string `json:"time"`
+	LikeCount    int    `json:"likeCount"`
+	DislikeCount int    `json:"dislikeCount"`
+	CategoryName   string    `json:"categoryName"`
 }
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
@@ -37,23 +51,23 @@ func CreatePost(title, content string, authorId int) (int, error) {
 }
 
 // Fetch all Posts:
-func GetAllPosts() ([]*Post, error) {
+func GetAllPosts() ([]*NeededPost, error) {
 	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 	// Fetch Posts from the database
-	rows, err := db.Query("SELECT * FROM Post")
+	rows, err := db.Query("SELECT Post.ID, Title, Content, AuthorID, Timestamp, LikeCount, DislikeCount, Category.Name FROM Post INNER JOIN PostCategory ON Post.ID = PostCategory.PostID  INNER JOIN Category ON PostCategory.CategoryID = Category.ID;")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var Posts []*Post
+	var Posts []*NeededPost
 	for rows.Next() {
-		post := &Post{}
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Timestamp, &post.LikeCount, &post.DislikeCount); err != nil {
+		post := &NeededPost{}
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Timestamp, &post.LikeCount, &post.DislikeCount, &post.CategoryName); err != nil {
 			return nil, err
 		}
 		Posts = append(Posts, post)

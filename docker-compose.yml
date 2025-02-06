@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  go-app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app:/go-app/app
+      - ./app/uploads:/go-app/app/uploads  # Correct volume mapping
+      - ./forum.db:/go-app/forum.db
+      - ./app/static/css:/go-app/app/static/css
+      - ./app/static/scripts:/go-app/app/static/scripts
+    environment:
+      - ENV=production

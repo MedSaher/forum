@@ -15,17 +15,17 @@ func GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Fetch books from the database
-	users, err := models.GetAllPosts()
+	posts, err := models.GetAllPosts()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	// Respond with JSON
+	fmt.Println(posts)
 	// Set headers and encode response
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	json.NewEncoder(w).Encode(posts)
 }
 
 // Test:
