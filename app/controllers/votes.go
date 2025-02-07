@@ -3,7 +3,10 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+
+	"forum/app/models"
 )
 
 type voteData struct {
@@ -11,7 +14,7 @@ type voteData struct {
 	Value  int `json:"value"`
 }
 
-func CreateVote(wr http.ResponseWriter, rq *http.Request) {
+func VoteForPost(wr http.ResponseWriter, rq *http.Request) {
 	if rq.Method != http.MethodPost {
 		http.Error(wr, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -28,5 +31,30 @@ func CreateVote(wr http.ResponseWriter, rq *http.Request) {
 		http.Error(wr, "Invalid vote value", http.StatusBadRequest)
 		return
 	}
-	
+
+	cookie, err := rq.Cookie("session_token")
+	if err != nil {
+		http.Error(wr, "No active session", http.StatusBadRequest)
+		return
+	}
+
+	session, err := models.GetSessionByUUID(cookie.Value)
+	if err != nil {
+		http.Error(wr, "No active session", http.StatusInternalServerError)
+		return
+	}
+	fmt.Println(session)
+	err = models.VoteForPost(session.UserID, &vote.PostId, nil, vote.Value)
+	if err != nil {
+		http.Error(wr, "No active session", http.StatusInternalServerError)
+		return
+	}
+
+	// Log success and send a response back to the client.
+	log.Println("User successfully registered.")
+	response := map[string]string{
+		"message":   "User registered successfully",
+	}
+	wr.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(wr).Encode(response) // Return success response in JSON format.
 }

@@ -151,14 +151,14 @@ document.addEventListener("DOMContentLoaded", async function () {
                 // Attach event listeners
                 likeBtn.addEventListener("click", async () => {
                     try {
-                        const response = await fetch(`http://localhost:8080/vote`, { // Use backticks
+                        const response = await fetch(`http://localhost:8080/vote_for_post`, { // Use backticks
                             method: "POST", // Set HTTP method to POST
                             headers: {
                                 "Content-Type": "application/json"
                             },
                             body: JSON.stringify({ postId: post.id, value: 1 }) // Send data if required by backend
                         });
-                
+
                         if (response.ok) {
                             window.location.reload(); // Refresh page to update dislike count
                         }
@@ -166,11 +166,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                         console.error("Error:", error);
                     }
                 });
-                
+
 
                 dislikeBtn.addEventListener("click", async () => {
                     try {
-                        const response = await fetch(`http://localhost:8080/vote`, { // Use backticks
+                        const response = await fetch(`http://localhost:8080/vote_for_post`, { // Use backticks
                             method: "POST", // Set HTTP method to POST
                             headers: {
                                 "Content-Type": "application/json"

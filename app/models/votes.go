@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"forum/app/config"
@@ -17,10 +18,49 @@ type Vote struct {
 }
 
 // CreateVote function
-func CreateVote(userID int, postID *int, commentID *int, value int) (*Vote, error) {
+func VoteForPost(userID int, postID *int, commentID *int, value int) error {
 	db, err := config.InitDB()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	
+	query := "INSERT INTO Vote (UserID, PostID, CommentID, Value) VALUES (?, ?, ?, ?)"
+	_, err = db.Exec(query, userID, postID, commentID, value)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Check if the user has alraedy voted for the:
+func ChekUserVote(id int, vote_id int, table string) (bool, error) {
+	db, err := config.InitDB()
+	if err != nil {
+		return false, err
+	}
+	query := ""
+	var count int
+	switch table {
+	case "Comment":
+		query = "SELECT COUNT(*) FROM Vote WHERE UserId = ? AND PostID = ?"
+	case "Post":
+		query = "SELECT COUNT(*) FROM Vote WHERE UserId = ? AND PostID = ?"
+	default:
+		return false, errors.New("wrong table name")
+	}
+
+	err = db.QueryRow(query, id, vote_id).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// Update a vote if it is already updated:
+func UpdatePost() error {
+	db, err := config.InitDB()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

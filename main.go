@@ -5,20 +5,36 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 
+	"forum/app/config"
 	"forum/app/controllers"
 	"forum/app/routers"
 )
 
-
 func main() {
-	// Parse the static files:
 	var err error
+	// Check if the database file exists
+	if _, err = os.Stat("forum.db"); os.IsNotExist(err) {
+		// Create an empty file
+		file, err := os.Create("forum.db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		// Instantiate the schema:
+		err = config.CreateSchema()
+		if err != nil {
+			log.Fatal(err)
+		}
+		file.Close()
+	}
+
+	// Parse the static files:
 	controllers.Tmpl, err = template.ParseGlob("./app/views/*.html")
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	// create a new instance of the router:
 	router := routers.NewRouter()
 	// handle static files:
