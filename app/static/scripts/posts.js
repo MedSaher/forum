@@ -37,7 +37,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                     });
 
                     if (logoutResponse.ok) {
-                        alert("Logged out successfully!");
                         window.location.reload(); // Refresh page to show login button
                     } else {
                         console.error("Logout failed");
@@ -81,6 +80,43 @@ document.addEventListener("DOMContentLoaded", async function () {
             category_list.appendChild(category_item)
         })
 
+        if(loged) {
+            // Add a filter for liked posts:
+            let likedPosts = document.createElement("li")
+            likedPosts.classList.add("other-item")
+            likedPosts.textContent = "liked posts"
+
+            // Add a filter for owned posts:
+            let ownedPost = document.createElement("li")
+            ownedPost.classList.add("other-item")
+            ownedPost.textContent = "created posts"
+
+            // Filter based on liked posts:
+            likedPosts.addEventListener("click", async () => {
+                try {
+                    const response = await fetch('http://localhost:8080/liked')
+
+                } catch(error){
+
+                }
+            })
+
+            // Filter based on liked posts:
+            ownedPost.addEventListener("click", async () => {
+                likedPosts.addEventListener("click", async () => {
+                    try {
+                        const response = await fetch('http://localhost:8080/owned')
+                    } catch(error){
+    
+                    }
+                })
+            })
+
+            category_list.appendChild(likedPosts)
+            category_list.appendChild(ownedPost)
+        }
+
+    
         side_bar.appendChild(category_list)
     } catch (error) {
         console.error('Error: ', error)
@@ -187,7 +223,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     }
                 });
 
-              
+
                 // Toggle Comment Section visibility
                 commentBtn.addEventListener("click", () => {
                     commentSection.style.display = commentSection.style.display === "none" || !commentSection.style.display ? "block" : "none";
@@ -240,3 +276,4 @@ function filterPosts(selected) {
     });
 }
 
+// Create a function to fiter based on liked posts:

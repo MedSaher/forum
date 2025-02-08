@@ -85,7 +85,8 @@ func (router *Router) MiddleWare() {
 	router.AddRoute("GET", "/add_post", controllers.AddPost)
 	router.AddRoute("POST", "/add_post", controllers.AddPost)
 	router.AddRoute("POST", "/vote_for_post", controllers.VoteForPost)
-	router.AddRoute("GET", "", controllers.GetVoteCount)
+	router.AddRoute("GET", "/liked", controllers.GetLikedPosts)
+	router.AddRoute("GET", "/owned", controllers.GetOwnedPosts)
 }
 
 // Add a middleware for static files:

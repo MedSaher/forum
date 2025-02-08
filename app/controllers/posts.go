@@ -94,3 +94,12 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 	wr.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(wr).Encode(response)
 }
+
+// A handler to get liked counts:
+func GetLikedPosts(wr http.ResponseWriter, rq *http.Request) {
+	
+}
+
+func GetOwnedPosts(wr http.ResponseWriter, rq *http.Request) {
+
+}

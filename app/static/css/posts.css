@@ -196,6 +196,17 @@ body {
     background-color: var(--secondary-color);
 }
 
+.other-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.other-item:hover {
+    background-color: var(--secondary-color);
+}
+
 .badge {
     background-color: var(--primary-color);
     color: white;

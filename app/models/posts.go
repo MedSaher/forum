@@ -94,3 +94,15 @@ func UpdateVoteCount(postID int) error {
 	}
 	return nil
 }
+
+// // Get the liked posts from database:
+// func GetLikedPosts() map[int]bool {
+// 	liked := make(map[int]bool)
+
+// }
+
+// // Get the owned posts from database:
+// func GetOwnedPosts() map[int]bool {
+// 	owned := make(map[int]bool)
+
+// }
