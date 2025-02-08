@@ -15,7 +15,6 @@ type Post struct {
 	DislikeCount int    `json:"dislikeCount"`
 }
 
-
 type NeededPost struct {
 	ID           int    `json:"id"`
 	Title        string `json:"title"`
@@ -24,7 +23,7 @@ type NeededPost struct {
 	Timestamp    string `json:"time"`
 	LikeCount    int    `json:"likeCount"`
 	DislikeCount int    `json:"dislikeCount"`
-	CategoryName   string    `json:"categoryName"`
+	CategoryName string `json:"categoryName"`
 }
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
@@ -73,4 +72,25 @@ func GetAllPosts() ([]*NeededPost, error) {
 		Posts = append(Posts, post)
 	}
 	return Posts, nil
+}
+
+// UpdateVoteCount updates the like and dislike counts for a given post in the POSTS table
+func UpdateVoteCount(postID int) error {
+	db, err := config.InitDB()
+	if err != nil {
+		return err
+	}
+	// Update query to set like and dislike counts
+	updateQuery := `
+		UPDATE Post
+		SET LikeCount = (SELECT COUNT(*) FROM VOTE WHERE PostID = ? AND Value = 1),
+		    DislikeCount = (SELECT COUNT(*) FROM VOTE WHERE PostID = ? AND Value = -1)
+		WHERE ID = ?;
+	`
+	// Execute the update query
+	_, err = db.Exec(updateQuery, postID, postID, postID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -46,15 +46,29 @@ func VoteForPost(wr http.ResponseWriter, rq *http.Request) {
 	fmt.Println(session)
 	err = models.VoteForPost(session.UserID, &vote.PostId, nil, vote.Value)
 	if err != nil {
+		fmt.Println("Error voting for the post")
 		http.Error(wr, "No active session", http.StatusInternalServerError)
 		return
 	}
 
+	// Get the vote count:
+	err = models.UpdateVoteCount(vote.PostId)
+	if err != nil {
+		fmt.Println("Error updating post count", err)
+		http.Error(wr, "No active session", http.StatusInternalServerError)
+		return
+	}
 	// Log success and send a response back to the client.
-	log.Println("User successfully registered.")
+	log.Println("User voted successfully.")
 	response := map[string]string{
-		"message":   "User registered successfully",
+		"message": "User voted successfully.",
 	}
 	wr.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(wr).Encode(response) // Return success response in JSON format.
+}
+
+
+// Create a handler to return the vote count:
+func GetVoteCount(wr http.ResponseWriter, rq *http.Request) {
+
 }

@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 const likeCount = document.createElement("span");
                 likeCount.classList.add("like-count");
-                likeCount.textContent = "0";
+                likeCount.textContent = post.likeCount;
                 likeBtn.appendChild(likeCount);
 
                 // Create dislike button
@@ -145,10 +145,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 const dislikeCount = document.createElement("span");
                 dislikeCount.classList.add("dislike-count");
-                dislikeCount.textContent = "0";
+                dislikeCount.textContent = post.dislikeCount;
                 dislikeBtn.appendChild(dislikeCount);
 
                 // Attach event listeners
+                // Handle the like btn behavior:
                 likeBtn.addEventListener("click", async () => {
                     try {
                         const response = await fetch(`http://localhost:8080/vote_for_post`, { // Use backticks
@@ -167,7 +168,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     }
                 });
 
-
+                // Handle the dislike btn behavior:
                 dislikeBtn.addEventListener("click", async () => {
                     try {
                         const response = await fetch(`http://localhost:8080/vote_for_post`, { // Use backticks
@@ -186,7 +187,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     }
                 });
 
-
+              
                 // Toggle Comment Section visibility
                 commentBtn.addEventListener("click", () => {
                     commentSection.style.display = commentSection.style.display === "none" || !commentSection.style.display ? "block" : "none";
@@ -221,6 +222,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     } catch (error) {
         console.error('Error:', error);
     }
+
 });
 
 
@@ -237,3 +239,4 @@ function filterPosts(selected) {
         }
     });
 }
+

@@ -1,7 +1,8 @@
 package models
 
 import (
-	"errors"
+	"database/sql"
+	"fmt"
 	"time"
 
 	"forum/app/config"
@@ -17,50 +18,48 @@ type Vote struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// CreateVote function
+// VoteForPost toggles a vote if it exists; otherwise, inserts a new vote.
 func VoteForPost(userID int, postID *int, commentID *int, value int) error {
 	db, err := config.InitDB()
 	if err != nil {
 		return err
 	}
-	query := "INSERT INTO Vote (UserID, PostID, CommentID, Value) VALUES (?, ?, ?, ?)"
-	_, err = db.Exec(query, userID, postID, commentID, value)
-	if err != nil {
-		return err
+	defer db.Close()
+
+	var existingValue int
+
+	// Query to check if a vote exists and toggle it
+	query := `SELECT Value FROM Vote
+	WHERE UserID = ? AND (PostID = COALESCE(?, PostID) OR CommentID = COALESCE(?, CommentID))`
+	err = db.QueryRow(query, userID, ptrIntValue(postID), ptrIntValue(commentID)).Scan(&existingValue)
+
+	if err == sql.ErrNoRows {
+		// Insert a new vote
+		insertQuery := `INSERT INTO Vote (UserID, PostID, CommentID, Value) VALUES (?, ?, ?, ?)`
+		_, err := db.Exec(insertQuery, userID, ptrIntValue(postID), ptrIntValue(commentID), value)
+		if err != nil {
+			return err
+		}
+	} else if err == nil {
+		// Vote exists, toggle the value
+		timestamp := time.Now().Format("2006-01-02 15:04:05")
+		updateQuery := `UPDATE Vote
+		SET Value = ?, Timestamp = ? 
+		WHERE UserID = ? AND (PostID = COALESCE(?, PostID) OR CommentID = COALESCE(?, CommentID))`
+		_, err = db.Exec(updateQuery, value, timestamp, userID, ptrIntValue(postID), ptrIntValue(commentID))
+		if err != nil {
+			return err
+		}
 	}
+
+	fmt.Println("Existing Value:", existingValue)
 	return nil
 }
 
-// Check if the user has alraedy voted for the:
-func ChekUserVote(id int, vote_id int, table string) (bool, error) {
-	db, err := config.InitDB()
-	if err != nil {
-		return false, err
+// Helper function to handle nil pointers
+func ptrIntValue(ptr *int) interface{} {
+	if ptr == nil {
+		return nil
 	}
-	query := ""
-	var count int
-	switch table {
-	case "Comment":
-		query = "SELECT COUNT(*) FROM Vote WHERE UserId = ? AND PostID = ?"
-	case "Post":
-		query = "SELECT COUNT(*) FROM Vote WHERE UserId = ? AND PostID = ?"
-	default:
-		return false, errors.New("wrong table name")
-	}
-
-	err = db.QueryRow(query, id, vote_id).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}
-
-// Update a vote if it is already updated:
-func UpdatePost() error {
-	db, err := config.InitDB()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return *ptr
 }
