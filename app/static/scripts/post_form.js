@@ -31,32 +31,15 @@ document.addEventListener("DOMContentLoaded", async function () {
     try {
         const response = await fetch('http://localhost:8080/all_categories');
         const categories = await response.json();
-        
         categories.forEach(category => {
-            // Create a container for each checkbox
-            let checkboxContainer = document.createElement("div");
-    
-            // Create the checkbox input
-            let checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.id = category.name;
-            checkbox.name = "categories"; // Use a common name to send multiple selections
-            checkbox.value = category.name;
-    
-            // Create the label
-            let label = document.createElement("label");
-            label.htmlFor = category.name;
-            label.textContent = category.name;
-    
-            // Append checkbox and label to the container
-            checkboxContainer.appendChild(checkbox);
-            checkboxContainer.appendChild(label);
-    
-            // Append the container to the parent element
-            select_container.appendChild(checkboxContainer);
-        });
+            let category_option = document.createElement("option")
+            category_option.value = category.name
+            category_option.textContent = category.name
+            select_element.appendChild(category_option)
+        })
+        select_container.appendChild(select_element)
     } catch (error) {
-        console.error('Error: ', error);
-    }    
+        console.error('Error: ', error)
+    }
 })
 
