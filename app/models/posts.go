@@ -15,15 +15,17 @@ type Post struct {
 	DislikeCount int    `json:"dislikeCount"`
 }
 
-type NeededPost struct {
-	ID           int    `json:"id"`
-	Title        string `json:"title"`
-	Content      string `json:"content"`
-	AuthorID     int    `json:"authorId"`
-	Timestamp    string `json:"time"`
-	LikeCount    int    `json:"likeCount"`
-	DislikeCount int    `json:"dislikeCount"`
-	CategoryName string `json:"categoryName"`
+type PostDTO struct {
+	ID              int    `json:"id"`
+	Title           string `json:"title"`
+	Content         string `json:"content"`
+	AuthorID        int    `json:"authorId"`
+	Timestamp       string `json:"time"`
+	LikeCount       int    `json:"likeCount"`
+	DislikeCount    int    `json:"dislikeCount"`
+	CategoryName    string `json:"categoryName"`
+	AuthorFirstName string `json:"authorFirstName"`
+	AuthorLastName  string `json:"authorLastName"`
 }
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
@@ -50,23 +52,40 @@ func CreatePost(title, content string, authorId int) (int, error) {
 }
 
 // Fetch all Posts:
-func GetAllPosts() ([]*NeededPost, error) {
+func GetAllPosts() ([]*PostDTO, error) {
 	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
+	// The query:
+	query := `SELECT 
+    Post.ID, 
+    Title, 
+    Content, 
+    AuthorID, 
+    Timestamp, 
+    LikeCount, 
+    DislikeCount, 
+    Category.Name, 
+    User.FirstName, 
+    User.LastName 
+FROM User 
+INNER JOIN Post ON User.ID = Post.AuthorID 
+INNER JOIN PostCategory ON Post.ID = PostCategory.PostID  
+INNER JOIN Category ON PostCategory.CategoryID = Category.ID;`
+
 	// Fetch Posts from the database
-	rows, err := db.Query("SELECT Post.ID, Title, Content, AuthorID, Timestamp, LikeCount, DislikeCount, Category.Name FROM Post INNER JOIN PostCategory ON Post.ID = PostCategory.PostID  INNER JOIN Category ON PostCategory.CategoryID = Category.ID;")
+	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var Posts []*NeededPost
+	var Posts []*PostDTO
 	for rows.Next() {
-		post := &NeededPost{}
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Timestamp, &post.LikeCount, &post.DislikeCount, &post.CategoryName); err != nil {
+		post := &PostDTO{}
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Timestamp, &post.LikeCount, &post.DislikeCount, &post.CategoryName, &post.AuthorFirstName, &post.AuthorLastName); err != nil {
 			return nil, err
 		}
 		Posts = append(Posts, post)

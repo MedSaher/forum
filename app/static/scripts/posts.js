@@ -132,6 +132,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             const card = document.createElement("div");
             card.classList.add("card");
             card.setAttribute("data-category", post.categoryName)
+            card.setAttribute("post_id", post.id)
             const title = document.createElement("div");
             title.classList.add("card-title");
             title.textContent = post.title;
