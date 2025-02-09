@@ -81,42 +81,53 @@ document.addEventListener("DOMContentLoaded", async function () {
         })
 
         if (loged) {
-            // Add a filter for liked posts:
-            let likedPosts = document.createElement("li")
-            likedPosts.classList.add("other-item")
-            likedPosts.textContent = "liked posts"
+            let likedPosts = document.createElement("li");
+            likedPosts.classList.add("other-item");
+            likedPosts.textContent = "liked posts";
 
             // Add a filter for owned posts:
-            let ownedPost = document.createElement("li")
-            ownedPost.classList.add("other-item")
-            ownedPost.textContent = "created posts"
+            let ownedPost = document.createElement("li");
+            ownedPost.classList.add("other-item");
+            ownedPost.textContent = "created posts";
 
             // Filter based on liked posts:
             likedPosts.addEventListener("click", async () => {
                 try {
-                    // Await the JSON data from the response
                     const response = await fetch('http://localhost:8080/liked');
                     let liked = await response.json();
                     console.log(liked);
-                    filterLikedPosts(liked)
+                    filterLikedPosts(liked);
                 } catch (error) {
                     console.error("Error:", error);
                 }
             });
 
-
-            // Filter based on liked posts:
+            // Filter based on owned posts:
             ownedPost.addEventListener("click", async () => {
-                likedPosts.addEventListener("click", async () => {
-                    try {
-                        const response = await fetch('http://localhost:8080/owned')
-                        let owned = await response.json()
-                        filterLikedPosts(owned)
-                    } catch (error) {
-                        console.error("Error:", error);
-                    }
-                })
-            })
+                try {
+                    const response = await fetch('http://localhost:8080/owned');
+                    let owned = await response.json();
+                    console.log(owned);
+
+                    const cards = document.getElementsByClassName("card");
+                    console.log("Total cards:", cards.length);
+
+                    Array.from(cards).forEach(card => {
+                        let itemId = card.getAttribute("post_id");
+                        console.log("Card ID:", itemId);
+
+                        if (owned[itemId] === true) {
+                            console.log(`Showing card with ID: ${itemId}`);
+                            card.style.display = "block";
+                        } else {
+                            console.log(`Hiding card with ID: ${itemId}`);
+                            card.style.display = "none";
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error:", error);
+                }
+            });
             category_list.appendChild(likedPosts)
             category_list.appendChild(ownedPost)
         }
