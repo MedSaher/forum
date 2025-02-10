@@ -261,7 +261,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 
 // Create a function to filter based on the post category:
 function filterPosts(selected) {
-    const cards = document.getElementsByClassName("card")
+    const cards = document.getElementsByClassName("post")
     console.log(cards);
     Array.from(cards).forEach(card => {
         const itemCategory = card.getAttribute("data-category");
