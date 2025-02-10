@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"forum/app/config"
@@ -49,17 +48,17 @@ func GetSessionByUUID(uuid string) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	session := &Session{}
+	var session = &Session{}
 	// Ensure we pass the address of each field, so the values can be scanned correctly
 	err = db.QueryRow("SELECT ID, UserID, UUID, ExpiresAt FROM Session WHERE UUID = ?", uuid).
-		Scan(&session.ID, &session.UserID, &session.UUID, &session.ExpiresAt) // Use & to pass the address of each field
+		Scan(&session.ID, &session.UserID, &session.UUID, &session.ExpiresAt)  // Use & to pass the address of each field
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("session not found")
 		}
 		return nil, err
 	}
-	fmt.Println(session) // You can log the session to verify it's correct
+	fmt.Println(session)  // You can log the session to verify it's correct
 	return session, nil
 }
 
@@ -71,22 +70,4 @@ func DeleteSession(uuid string) error {
 	}
 	_, err = db.Exec("DELETE FROM Session WHERE UUID = ?", uuid)
 	return err
-}
-
-// Get user id from session:
-func GetUserIdFromSession(rq *http.Request) (int, error){
-	cookie, err := rq.Cookie("session_token")
-	if err != nil {
-		return -1, err
-	}
-	session, err := GetSessionByUUID(cookie.Value)
-	if err != nil {
-		return -1, err
-	}
-	uuid := session.UUID
-	user, err := GetUserByTocken(uuid)
-	if err != nil {
-		return -1, err
-	}
-	return user.ID, nil
 }

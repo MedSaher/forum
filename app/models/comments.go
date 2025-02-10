@@ -16,14 +16,14 @@ type Comment struct {
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new Comment:
-func CreateComment(title, content string, authorId int, postId int) error {
+func CreateComment(title, content string, authorId string) error {
 	db, err := config.InitDB()
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	query := `INSERT INTO Comment (Title, Content, AuthorId, PostID)
-          VALUES (?, ?, ?, ?)`
+	query := `INSERT INTO Comment (Title, Content, AuthorId)
+          VALUES (?, ?, ?)`
 	_, err = db.Exec(query, title, content, authorId)
 	if err != nil {
 		return err

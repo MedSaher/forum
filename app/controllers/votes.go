@@ -19,14 +19,17 @@ func VoteForPost(wr http.ResponseWriter, rq *http.Request) {
 		http.Error(wr, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
+
 	vote := &voteData{}
 	// Parse the JSON request body
 	if err := json.NewDecoder(rq.Body).Decode(vote); err != nil {
 		http.Error(wr, "Invalid request body", http.StatusBadRequest)
+		fmt.Println(err)
 		return
 	}
+
 	fmt.Println(vote)
-	// validate input:
+	// Validate input
 	if vote.Value != 1 && vote.Value != -1 {
 		http.Error(wr, "Invalid vote value", http.StatusBadRequest)
 		return
@@ -43,32 +46,33 @@ func VoteForPost(wr http.ResponseWriter, rq *http.Request) {
 		http.Error(wr, "No active session", http.StatusInternalServerError)
 		return
 	}
+
 	fmt.Println(session)
 	err = models.VoteForPost(session.UserID, &vote.PostId, nil, vote.Value)
 	if err != nil {
 		fmt.Println("Error voting for the post")
-		http.Error(wr, "No active session", http.StatusInternalServerError)
+		http.Error(wr, "Failed to vote", http.StatusInternalServerError)
 		return
 	}
 
-	// Get the vote count:
+	// Get the updated vote count
 	err = models.UpdateVoteCount(vote.PostId)
 	if err != nil {
 		fmt.Println("Error updating post count", err)
-		http.Error(wr, "No active session", http.StatusInternalServerError)
+		http.Error(wr, "Failed to update vote count", http.StatusInternalServerError)
 		return
 	}
-	// Log success and send a response back to the client.
+
+	// Log success and send response back to client
 	log.Println("User voted successfully.")
 	response := map[string]string{
 		"message": "User voted successfully.",
 	}
 	wr.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(wr).Encode(response) // Return success response in JSON format.
+	json.NewEncoder(wr).Encode(response)
 }
 
-
-// Create a handler to return the vote count:
+// Create a handler to return the vote count
 func GetVoteCount(wr http.ResponseWriter, rq *http.Request) {
-
+	// Implementation needed
 }

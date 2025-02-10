@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", async function () {
+document.addEventListener("DOMContentLoaded", async function() {
     var logged = false;
     let userProfile = document.getElementById("user-profile");
 
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 const logoutBtn = document.createElement("button");
                 logoutBtn.classList.add("logout-btn");
                 logoutBtn.textContent = "Logout";
-                logoutBtn.onclick = async function () {
+                logoutBtn.onclick = async function() {
                     try {
                         const logoutResponse = await fetch('http://localhost:8080/logout', {
                             method: 'POST',
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 const loginBtn = document.createElement("button");
                 loginBtn.classList.add("login-btn");
                 loginBtn.textContent = "Login";
-                loginBtn.onclick = function () {
+                loginBtn.onclick = function() {
                     window.location.href = '/register';
                 };
 
@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             cmtBtn.appendChild(cmtIcon);
 
             // Attach Event Listener **INSIDE THE LOOP**
-            likeBtn.addEventListener("click", async () => {
+            likeBtn.addEventListener("click", async() => {
                 if (!logged) {
                     alert("You need to log in to like posts!");
                     return;
@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             });
 
             // Handle the dislike btn behavior:
-            dislikeBtn.addEventListener("click", async () => {
+            dislikeBtn.addEventListener("click", async() => {
                 try {
                     const response = await fetch(`http://localhost:8080/vote_for_post`, { // Use backticks
                         method: "POST", // Set HTTP method to POST
@@ -223,41 +223,19 @@ document.addEventListener("DOMContentLoaded", async function () {
 
             // handle comments
 
-            cmtBtn.addEventListener("click", function () {
+            cmtBtn.addEventListener("click", async function() {
                 closeBtn = document.getElementById("close-btn")
                 modalPostTitle.textContent = post.title;
                 modalPostContent.textContent = post.content;
+                // commentBox.value = "";
+                // commentsList.innerHTML = "";
                 commentModal.style.display = "block";
                 // await loadComments(postId);
                 closeBtn.addEventListener("click", () => commentModal.style.display = "none");
                 window.addEventListener("click", event => {
                     if (event.target === commentModal) commentModal.style.display = "none";
                 });
-                document.getElementById("commentForm").addEventListener("submit", async function (event) {
-                    event.preventDefault(); // Prevent page reload
-
-                    let commentText = document.getElementById("commentBox").value.trim();
-          
-                    try {
-                        const response = await fetch(`http://localhost:8080/create_comment`, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({ postId: post.id, content: commentText})
-                        });
-                    } catch (error) {
-                        console.error("Error:", error);
-                    }
-                    if (commentText) {
-                        let commentList = document.getElementById("commentsList");
-                        let newComment = document.createElement("p");
-                        newComment.textContent = commentText;
-                        commentList.appendChild(newComment);
-
-                        document.getElementById("commentBox").value = ""; // Clear input
-                    }
-                });
+                submitCommentBtn.onclick = () => submitComment(postId);
             });
             // Append all elements to footer
             postFooter.appendChild(likeBtn);
