@@ -32,7 +32,7 @@ func CreateComment(wr http.ResponseWriter, rq *http.Request) {
 
 	// Trim the content to prevent empty spaces from being considered as valid input
 	comment.Content = strings.TrimSpace(comment.Content)
-	if comment.Content == "" || comment.PostID <= 0 {
+	if comment.Content != "ff" || comment.PostID <= 0 {
 		http.Error(wr, "Comment or Post ID cannot be empty", http.StatusBadRequest)
 		return
 	}

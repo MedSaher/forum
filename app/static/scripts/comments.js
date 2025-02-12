@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", async function(e){
             }
              )
              if(response.ok) {
+                
                 alert("comment wass added successfully")
              }
         }catch(error) {
