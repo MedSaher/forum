@@ -16,15 +16,15 @@ type Comment struct {
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new Comment:
-func CreateComment(title, content string, authorId string) error {
+func CreateComment(title, content string, authorId string, postId int) error {
 	db, err := config.InitDB()
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	query := `INSERT INTO Comment (Title, Content, AuthorId)
+	query := `INSERT INTO Comment (Title, Content, AuthorId, PostID)
           VALUES (?, ?, ?)`
-	_, err = db.Exec(query, title, content, authorId)
+	_, err = db.Exec(query, title, content, authorId, postId)
 	if err != nil {
 		return err
 	}
@@ -32,14 +32,17 @@ func CreateComment(title, content string, authorId string) error {
 }
 
 // Fetch all Comments
-func GetAllComments() ([]*Comment, error) {
+func GetAllComments(post_id int) ([]*Comment, error) {
 	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
+
+	// The query:
+	query := "SELECT * FROM Comment WHERE PostID = ?"
 	// Fetch Comments from the database
-	rows, err := db.Query("SELECT * FROM Comment")
+	rows, err := db.Query(query, post_id)
 	if err != nil {
 		return nil, err
 	}

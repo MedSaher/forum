@@ -43,7 +43,7 @@ func GetAllCategories() ([]*Category, error) {
 }
 
 // Extract the category id:
-func GetCategoryById(category string) (int, error) {
+func GetCategoryId(category string) (int, error) {
 	db, err := config.InitDB()
 	if err != nil {
 		return -1, err

@@ -1,18 +1,20 @@
 document.addEventListener("DOMContentLoaded", async function() {
-    var logged = false;
+    let logged = false;
     let userProfile = document.getElementById("user-profile");
 
-    (async function fetchUserProfile() {
+    // Function to fetch the user profile
+    async function fetchUserProfile() {
         try {
-            const response = await fetch('http://localhost:8080/profile');
+            const response = await fetch("http://localhost:8080/profile");
             const user = await response.json();
 
             // Create user container
             const userInfo = document.createElement("div");
             userInfo.classList.add("user-info");
-
             if (user) {
-                logged = true;
+                logged = true; // Ensure `logged` is updated correctly
+                console.log("User is logged in");
+
 
                 // Profile Image
                 const profileImg = document.createElement("img");
@@ -31,9 +33,9 @@ document.addEventListener("DOMContentLoaded", async function() {
                 logoutBtn.textContent = "Logout";
                 logoutBtn.onclick = async function() {
                     try {
-                        const logoutResponse = await fetch('http://localhost:8080/logout', {
-                            method: 'POST',
-                            credentials: 'include'
+                        const logoutResponse = await fetch("http://localhost:8080/logout", {
+                            method: "POST",
+                            credentials: "include",
                         });
 
                         if (logoutResponse.ok) {
@@ -50,6 +52,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 userInfo.appendChild(profileImg);
                 userInfo.appendChild(nameSpan);
                 userInfo.appendChild(logoutBtn);
+                userProfile.appendChild(userInfo);
             } else {
                 // Login Button for non-logged-in users
                 const loginBtn = document.createElement("button");
@@ -58,25 +61,87 @@ document.addEventListener("DOMContentLoaded", async function() {
                 loginBtn.onclick = function() {
                     window.location.href = '/register';
                 };
-
                 userInfo.appendChild(loginBtn);
             }
-
             userProfile.appendChild(userInfo);
-
         } catch (error) {
-            console.error('Error fetching profile:', error);
+            console.error("Error fetching profile:", error);
         }
-    })();
+    }
 
-    // Fetch all existing categories:
+    // Fill the categories dynamically with checkboxes:
+const select_container = document.getElementById("select_categories");
+
+try {
+    const response = await fetch('http://localhost:8080/all_categories');
+    const categories = await response.json();
+
+    categories.forEach(category => {
+        // Create a div wrapper for better styling
+        const checkboxWrapper = document.createElement("div");
+        checkboxWrapper.classList.add("form-check");
+
+        // Create the checkbox input
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.name = "chosen_categories[]"; // Array notation to handle multiple values
+        checkbox.value = category.name;
+        checkbox.id = `category_${category.name}`;
+        checkbox.classList.add("form-check-input");
+
+        // Create the label for the checkbox
+        const label = document.createElement("label");
+        label.htmlFor = `category_${category.name}`;
+        label.textContent = category.name;
+        label.classList.add("form-check-label");
+
+        // Append checkbox and label to wrapper
+        checkboxWrapper.appendChild(checkbox);
+        checkboxWrapper.appendChild(label);
+
+        // Append wrapper to container
+        select_container.appendChild(checkboxWrapper);
+    });
+} catch (error) {
+    console.error('Error: ', error);
+}
+
+// Add a logic to create a new post:
+    post_form = document.getElementById("postForm")
+    post_form.addEventListener("submit", async function (e) {
+        e.preventDefault()
+        data = new FormData(post_form)
+        try {
+            const response = await fetch("http://localhost:8080/add_post", {
+                method: "POST",
+                body: data,
+            })
+            if (response.ok) {
+                const result = await response.json();
+                alert("Post was added successfully: " + result.message);
+                // Redirect to the dashboard on successful login
+                window.location.href = '/';
+            } else {
+                console.log("post creation has failed")
+            }
+        } catch (error) {
+            console.error("Error: " + error)
+        }
+    })
+
+
+
+    // Ensure user profile is fetched and `logged` is set BEFORE proceeding
+    await fetchUserProfile();
+
+    // Now, fetch categories and only add "Liked Posts" if the user is logged in
     const side_bar = document.getElementById("navbar");
 
     try {
-        const response = await fetch('http://localhost:8080/all_categories');
+        const response = await fetch("http://localhost:8080/all_categories");
         const categories = await response.json();
 
-        categories.forEach(category => {
+        categories.forEach((category) => {
             let category_item = document.createElement("button");
             category_item.classList.add("category");
             category_item.textContent = category.name;
@@ -88,10 +153,76 @@ document.addEventListener("DOMContentLoaded", async function() {
             side_bar.appendChild(category_item);
         });
 
-    } catch (error) {
-        console.error('Error:', error);
-    }
 
+
+        // Ensure "Liked Posts" is only added AFTER the `logged` variable is set
+        if (logged) {
+
+            // handle liked posts filter 
+            let likedPostsBtn = document.createElement("button");
+            likedPostsBtn.classList.add("category");
+            likedPostsBtn.textContent = "Liked Posts";
+
+            // Add a filter for owned posts:
+            let ownedPost = document.createElement("button");
+            ownedPost.classList.add("category");
+            ownedPost.textContent = "created posts";
+
+            likedPostsBtn.addEventListener("click", async() => {
+                try {
+                    const response = await fetch("http://localhost:8080/liked");
+                    const likedPostIds = await response.json();
+                    console.log("Liked Post IDs:", likedPostIds);
+
+                    // Get all posts currently displayed
+                    const allPosts = document.querySelectorAll(".post");
+
+                    allPosts.forEach((post) => {
+                        const postId = post.getAttribute("post_id");
+
+                        // Check if post ID exists in the likedPostIds object
+                        if (likedPostIds[postId]) {
+                            post.style.display = "block"; // Show liked posts
+                        } else {
+                            post.style.display = "none"; // Hide unliked posts
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error fetching liked posts:", error);
+                }
+            });
+
+            ownedPost.addEventListener("click", async() => {
+                try {
+                    const response = await fetch("http://localhost:8080/owned");
+                    const ownedPosts = await response.json();
+                    console.log("Liked Post IDs:", ownedPosts);
+
+                    // Get all posts currently displayed
+                    const allPosts = document.querySelectorAll(".post");
+
+                    allPosts.forEach((post) => {
+                        const postId = post.getAttribute("post_id");
+
+                        // Check if post ID exists in the likedPostIds object
+                        if (ownedPosts[postId]) {
+                            post.style.display = "block"; // Show liked posts
+                        } else {
+                            post.style.display = "none"; // Hide unliked posts
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error fetching liked posts:", error);
+                }
+            });
+
+            // Append the "Liked Posts" button after categories
+            side_bar.appendChild(likedPostsBtn);
+            side_bar.appendChild(ownedPost);
+        }
+    } catch (error) {
+        console.error("Error:", error);
+    }
 
     // Fetch all existing posts:
     const main_content = document.getElementById("main-content");
@@ -101,9 +232,11 @@ document.addEventListener("DOMContentLoaded", async function() {
         const posts = await response.json();
 
         posts.forEach(post => {
+            console.log(post)
             const card = document.createElement("article");
             card.classList.add("post");
             card.setAttribute("data-category", post.categoryName);
+            card.setAttribute("post_id", post.id)
 
             // Post Header (Author, Category, Time)
             const postHeader = document.createElement("div");
@@ -180,7 +313,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             // Attach Event Listener **INSIDE THE LOOP**
             likeBtn.addEventListener("click", async() => {
                 if (!logged) {
-                    alert("You need to log in to like posts!");
+                    window.location.href = '/login';
                     return;
                 }
 
@@ -205,6 +338,10 @@ document.addEventListener("DOMContentLoaded", async function() {
 
             // Handle the dislike btn behavior:
             dislikeBtn.addEventListener("click", async() => {
+                if (!logged) {
+                    window.location.href = '/login';
+                    return;
+                }
                 try {
                     const response = await fetch(`http://localhost:8080/vote_for_post`, { // Use backticks
                         method: "POST", // Set HTTP method to POST
@@ -222,15 +359,14 @@ document.addEventListener("DOMContentLoaded", async function() {
             });
 
             // handle comments
-
             cmtBtn.addEventListener("click", async function() {
                 closeBtn = document.getElementById("close-btn")
                 modalPostTitle.textContent = post.title;
                 modalPostContent.textContent = post.content;
-                // commentBox.value = "";
-                // commentsList.innerHTML = "";
                 commentModal.style.display = "block";
-                // await loadComments(postId);
+                const comment = document.getElementById("commentBox")
+                comment.setAttribute("post_id", post.id)
+                commentModal.setAttribute("postId", post.id)
                 closeBtn.addEventListener("click", () => commentModal.style.display = "none");
                 window.addEventListener("click", event => {
                     if (event.target === commentModal) commentModal.style.display = "none";
@@ -259,18 +395,14 @@ document.addEventListener("DOMContentLoaded", async function() {
 });
 
 
-// Create a function to filter based on the post category:
 function filterPosts(selected) {
-    const cards = document.getElementsByClassName("post")
-    console.log(cards);
-    Array.from(cards).forEach(card => {
-        const itemCategory = card.getAttribute("data-category");
-        if (itemCategory === selected) {
-            card.style.display = "block";
+    const posts = document.getElementsByClassName("post"); // Correct class name
+    Array.from(posts).forEach(post => {
+        const itemCategory = post.getAttribute("data-category");
+        if (itemCategory === selected || selected === "All") {
+            post.style.display = "block";
         } else {
-            card.style.display = "none";
+            post.style.display = "none";
         }
     });
 }
-
-// comments handler

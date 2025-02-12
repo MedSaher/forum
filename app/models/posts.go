@@ -68,7 +68,7 @@ func GetAllPosts() ([]*PostDTO, error) {
     LikeCount, 
     DislikeCount, 
     Category.Name, 
-    User.FirstName, 
+    User.FirstName,
     User.LastName 
 FROM User 
 INNER JOIN Post ON User.ID = Post.AuthorID 
@@ -114,3 +114,50 @@ func UpdateVoteCount(postID int) error {
 	return nil
 }
 
+// // Get the liked posts from database:
+func GetLikedPosts(userId int) (map[int]bool, error) {
+	db, err := config.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	liked := make(map[int]bool)
+	query := `SELECT PostID FROM Vote WHERE UserID = ? AND Value = 1`
+	rows, err := db.Query(query, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var postId int
+		if err := rows.Scan(&postId); err != nil {
+			return nil, err
+		}
+		liked[postId] = true
+	}
+	return liked, nil
+}
+
+// Get the owned posts from database:
+func GetOwnedPosts(userId int) (map[int]bool, error) {
+	db, err := config.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	liked := make(map[int]bool)
+	query := `SELECT ID FROM Post WHERE AuthorID = ?`
+	rows, err := db.Query(query, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var postId int
+		if err := rows.Scan(&postId); err != nil {
+			return nil, err
+		}
+		liked[postId] = true
+	}
+	return liked, nil
+}

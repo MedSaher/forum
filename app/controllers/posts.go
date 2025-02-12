@@ -20,8 +20,6 @@ func GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// Respond with JSON
-	fmt.Println(posts)
 	// Set headers and encode response
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
@@ -48,16 +46,14 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 
 	cookie, err := rq.Cookie("session_token")
 	if err != nil {
-		// Handle error (e.g., cookie not found)
-		wr.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(wr).Encode(nil)
-		fmt.Println("Error:", err)
+		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	title := rq.FormValue("post_title")
 	content := rq.FormValue("post_content")
-	category := rq.FormValue("chosen_category")
-	fmt.Println(category)
+	categories := rq.Form["chosen_categories[]"] // Retrieves multiple values
+
+	fmt.Println(categories)
 	session, er := models.GetSessionByUUID(cookie.Value)
 	if er != nil {
 		fmt.Println("Error:", err)
@@ -76,16 +72,18 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 		fmt.Println("Error:", er)
 		return
 	}
-	fmt.Println(post_id)
-	category_id, er := models.GetCategoryById(category)
-	if er != nil {
-		fmt.Println("Error:", er)
-		return
-	}
-	// link the new inserted post to its category in database:
-	if err := models.LinkPostToCategory(post_id, category_id); err != nil {
-		fmt.Println("Error:", er)
-		return
+
+	for _, category := range categories {
+		category_id, er := models.GetCategoryId(category)
+		if er != nil {
+			fmt.Println("Error:", er)
+			return
+		}
+		// link the new inserted post to its category in database:
+		if err := models.LinkPostToCategory(post_id, category_id); err != nil {
+			fmt.Println("Error:", er)
+			return
+		}
 	}
 	// Respond with a success message
 	response := map[string]string{
@@ -95,11 +93,39 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 	json.NewEncoder(wr).Encode(response)
 }
 
-// A handler to get liked counts:
+// A handler to get liked posts:
 func GetLikedPosts(wr http.ResponseWriter, rq *http.Request) {
-	
+	userId, err := models.GetUserIdFromSession(rq)
+	if err != nil {
+		http.Error(wr, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	liked, err := models.GetLikedPosts(userId)
+	if err != nil {
+		http.Error(wr, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	wr.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(wr).Encode(liked)
 }
 
+
+
+
+// A handler to get owned posts:
 func GetOwnedPosts(wr http.ResponseWriter, rq *http.Request) {
-
+	userId, err := models.GetUserIdFromSession(rq)
+	fmt.Printf("user id : %v\n",  userId)
+	if err != nil {
+		http.Error(wr, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	liked, err := models.GetOwnedPosts(userId)
+	if err != nil {
+		http.Error(wr, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	wr.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(wr).Encode(liked)
 }
+

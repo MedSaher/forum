@@ -14,7 +14,7 @@ body {
 
 header {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
     background-color: #b95134;
     padding: 15px 20px;
@@ -365,4 +365,35 @@ header {
     float: right;
     font-size: 24px;
     cursor: pointer;
+}
+
+.create-post {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.post-title-input,
+.post-content-input,
+.category-select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.submit-post-btn {
+    background: #b95134;
+    color: white;
+    padding: 10px;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.submit-post-btn:hover {
+    background: #a03f28;
 }

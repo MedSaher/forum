@@ -3,7 +3,6 @@ package config
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -62,9 +61,8 @@ CREATE TABLE Vote (
     FOREIGN KEY (PostID) REFERENCES Post (ID) ON DELETE CASCADE,
     FOREIGN KEY (CommentID) REFERENCES Comment (ID) ON DELETE CASCADE,
     UNIQUE (UserID, PostID),
-    UNIQUE (UserID, CommentID) 
+    UNIQUE (UserID, CommentID)
 );
-
 CREATE TABLE IF NOT EXISTS Session (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     UserID INTEGER NOT NULL,
@@ -73,6 +71,13 @@ CREATE TABLE IF NOT EXISTS Session (
     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (UserID) REFERENCES User (ID) ON DELETE CASCADE
 );
+INSERT INTO Category (Name, Description) VALUES 
+('Technology', 'Discussions about programming, software, hardware, and emerging tech trends.'),
+('Gaming', 'A place to discuss video games, gaming consoles, and e-sports.'),
+('Science & Education', 'Topics related to scientific discoveries, research, and learning resources.'),
+('Lifestyle & Health', 'Conversations about fitness, mental health, diet, and daily life.'),
+('Entertainment', 'Movies, TV shows, music, and celebrity news discussions.'),
+('General Discussion', 'A category for off-topic discussions and community interactions.');
 `
 
 // Create the database schema:
@@ -97,6 +102,5 @@ func InitDB() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Database schema initialized successfully")
 	return db, nil
 }
