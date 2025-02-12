@@ -14,17 +14,18 @@ type Comment struct {
 	DislikeCount int    `json:"dislikeCount"`
 }
 
+
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new Comment:
-func CreateComment(title, content string, authorId string, postId int) error {
+func CreateComment(content string, authorId , postId int) error {
 	db, err := config.InitDB()
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	query := `INSERT INTO Comment (Title, Content, AuthorId, PostID)
+	query := `INSERT INTO Comment (Content, AuthorId, PostID)
           VALUES (?, ?, ?)`
-	_, err = db.Exec(query, title, content, authorId, postId)
+	_, err = db.Exec(query, content, authorId, postId)
 	if err != nil {
 		return err
 	}
