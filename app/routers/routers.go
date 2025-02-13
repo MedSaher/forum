@@ -85,9 +85,11 @@ func (router *Router) MiddleWare() {
 	router.AddRoute("GET", "/add_post", controllers.AddPost)
 	router.AddRoute("POST", "/add_post", controllers.AddPost)
 	router.AddRoute("POST", "/vote_for_post", controllers.VoteForPost)
+	router.AddRoute("POST", "/post_categories", controllers.GetPostCategories)
+	router.AddRoute("GET", "/posts_by_category", controllers.GetPostsByCategory)
 	router.AddRoute("GET", "/liked", controllers.GetLikedPosts)
 	router.AddRoute("GET", "/owned", controllers.GetOwnedPosts)
-	router.AddRoute("POST", "/get_comments", controllers.GetComments)
+	router.AddRoute("GET", "/get_comments", controllers.GetComments)
 	router.AddRoute("POST", "/post_comments", controllers.CreateComment)
 }
 

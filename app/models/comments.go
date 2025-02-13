@@ -1,6 +1,10 @@
 package models
 
-import "forum/app/config"
+import (
+	"fmt"
+
+	"forum/app/config"
+)
 
 // comment model: [one to many with Comment] and [one to many with user]:
 type Comment struct {
@@ -8,16 +12,14 @@ type Comment struct {
 	Content      string `json:"content"`
 	AuthorID     int    `json:"authorId"`
 	PostID       int    `json:"postId"`
-	CommentID    int    `json:"CommentId"`
-	Timestamp    int    `json:"timeStamp"`
+	Timestamp    string `json:"timeStamp"`
 	LikeCount    int    `json:"likeCount"`
 	DislikeCount int    `json:"dislikeCount"`
 }
 
-
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new Comment:
-func CreateComment(content string, authorId , postId int) error {
+func CreateComment(content string, authorId, postId int) error {
 	db, err := config.InitDB()
 	if err != nil {
 		return err
@@ -34,6 +36,7 @@ func CreateComment(content string, authorId , postId int) error {
 
 // Fetch all Comments
 func GetAllComments(post_id int) ([]*Comment, error) {
+	fmt.Println("Called")
 	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
@@ -52,7 +55,7 @@ func GetAllComments(post_id int) ([]*Comment, error) {
 	var Comments []*Comment
 	for rows.Next() {
 		comment := &Comment{}
-		if err := rows.Scan(&comment.ID, comment.Content, comment.AuthorID, comment.PostID, comment.LikeCount, comment.DislikeCount); err != nil {
+		if err := rows.Scan(&comment.ID, &comment.Content, &comment.AuthorID, &comment.PostID, &comment.Timestamp, &comment.LikeCount, &comment.DislikeCount); err != nil {
 			return nil, err
 		}
 		Comments = append(Comments, comment)

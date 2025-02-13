@@ -23,7 +23,6 @@ type PostDTO struct {
 	Timestamp       string `json:"time"`
 	LikeCount       int    `json:"likeCount"`
 	DislikeCount    int    `json:"dislikeCount"`
-	CategoryName    string `json:"categoryName"`
 	AuthorFirstName string `json:"authorFirstName"`
 	AuthorLastName  string `json:"authorLastName"`
 }
@@ -67,13 +66,11 @@ func GetAllPosts() ([]*PostDTO, error) {
     Timestamp, 
     LikeCount, 
     DislikeCount, 
-    Category.Name, 
     User.FirstName,
     User.LastName 
 FROM User 
 INNER JOIN Post ON User.ID = Post.AuthorID 
-INNER JOIN PostCategory ON Post.ID = PostCategory.PostID  
-INNER JOIN Category ON PostCategory.CategoryID = Category.ID;`
+`
 
 	// Fetch Posts from the database
 	rows, err := db.Query(query)
@@ -85,7 +82,7 @@ INNER JOIN Category ON PostCategory.CategoryID = Category.ID;`
 	var Posts []*PostDTO
 	for rows.Next() {
 		post := &PostDTO{}
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Timestamp, &post.LikeCount, &post.DislikeCount, &post.CategoryName, &post.AuthorFirstName, &post.AuthorLastName); err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Timestamp, &post.LikeCount, &post.DislikeCount, &post.AuthorFirstName, &post.AuthorLastName); err != nil {
 			return nil, err
 		}
 		Posts = append(Posts, post)
