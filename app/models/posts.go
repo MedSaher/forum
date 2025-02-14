@@ -90,27 +90,6 @@ INNER JOIN Post ON User.ID = Post.AuthorID
 	return Posts, nil
 }
 
-// UpdateVoteCount updates the like and dislike counts for a given post in the POSTS table
-func UpdateVoteCount(postID int) error {
-	db, err := config.InitDB()
-	if err != nil {
-		return err
-	}
-	// Update query to set like and dislike counts
-	updateQuery := `
-		UPDATE Post
-		SET LikeCount = (SELECT COUNT(*) FROM VOTE WHERE PostID = ? AND Value = 1),
-		    DislikeCount = (SELECT COUNT(*) FROM VOTE WHERE PostID = ? AND Value = -1)
-		WHERE ID = ?;
-	`
-	// Execute the update query
-	_, err = db.Exec(updateQuery, postID, postID, postID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // // Get the liked posts from database:
 func GetLikedPosts(userId int) (map[int]bool, error) {
 	db, err := config.InitDB()

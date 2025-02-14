@@ -1,14 +1,12 @@
 package routers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
 
 	"forum/app/controllers"
-	"forum/app/models"
 )
 
 // HandlerFunc defines the type for handler functions
@@ -91,6 +89,7 @@ func (router *Router) MiddleWare() {
 	router.AddRoute("GET", "/owned", controllers.GetOwnedPosts)
 	router.AddRoute("GET", "/get_comments", controllers.GetComments)
 	router.AddRoute("POST", "/post_comments", controllers.CreateComment)
+	router.AddRoute("POST", "/vote_for_comment", controllers.VoteForComment)
 }
 
 // Add a middleware for static files:
@@ -101,30 +100,4 @@ func (router *Router) StaticMiddleWare() {
 	router.AddStaticRoute("/app/static/scripts", "./app/static/scripts")
 	// serve pictures:
 	router.AddStaticRoute("/app/uploads", "./app/uploads")
-}
-
-// Create a session middleware in case of the abcence of login the program will force the user to log in:
-func SessionMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get the session UUID from the cookie
-		cookie, err := r.Cookie("session_id")
-		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-
-		// Validate the session from the database
-		userID, err := models.GetSessionByUUID(cookie.Value)
-		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-
-		// Add the userID to the request context
-		ctx := context.WithValue(r.Context(), "UserID", userID)
-		r = r.WithContext(ctx)
-
-		// Call the next handler
-		next.ServeHTTP(w, r)
-	})
 }
