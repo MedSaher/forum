@@ -268,7 +268,7 @@ async function addPost(data) {
         if (response.ok) {
             const result = await response.json();
             console.log("Post was added successfully: -------------->>>" + result.post_id);
-          await fetchSpecificPost(result.post_id)
+            await fetchSpecificPost(result.post_id)
         } else {
             console.log("post creation has failed")
         }
@@ -637,10 +637,114 @@ async function VoteForComment(comment_id, vote) {
 // fetch a specific post:
 async function fetchSpecificPost(post_id) {
     try {
-       const response = await fetch(`http://localhost:8080/special_post?post_id=${post_id}`)
+        const response = await fetch(`http://localhost:8080/special_post?post_id=${post_id}`)
         new_post = await response.json()
-        
-    }catch(error) {
+        if (response.ok) {
+            console.log("The new inserted post is: ", new_post);
+
+            // Create the article element using createPost function
+            let article = createPost(
+              new_post.id,
+              new_post.authorFirstName + " " + new_post.authorLastName,
+              new_post.time,
+              new_post.title,
+              new_post.content
+            );
+            
+            // Get the parent element
+            let parentDiv = document.getElementById("main-content");
+            
+            // Insert the new article at the top
+            parentDiv.insertBefore(article, parentDiv.firstChild);
+            
+        }
+    } catch (error) {
         console.error(error)
     }
+}
+
+// Create a post dynamically:
+// Function to create a new post element dynamically
+function createPost(postId, author, category, time, title, content) {
+    // Create article element
+    const article = document.createElement("article");
+    article.classList.add("post");
+    article.setAttribute("post_id", postId);
+
+    // Create post-header div
+    const header = document.createElement("div");
+    header.classList.add("post-header");
+
+    const authorSpan = document.createElement("span");
+    authorSpan.classList.add("post-author");
+    authorSpan.textContent = author;
+
+    const categorySpan = document.createElement("span");
+    categorySpan.classList.add("post-category");
+    categorySpan.textContent = category;
+
+    const timeSpan = document.createElement("span");
+    timeSpan.classList.add("post-time");
+    timeSpan.textContent = time;
+
+    header.append(authorSpan, categorySpan, timeSpan);
+
+    // Create title element
+    const h2 = document.createElement("h2");
+    h2.classList.add("post-title");
+    h2.textContent = title;
+
+    // Create content paragraph
+    const p = document.createElement("p");
+    p.classList.add("post-content");
+    p.textContent = content;
+
+    // Create post-footer div
+    const footer = document.createElement("div");
+    footer.classList.add("post-footer");
+
+    // Like button
+    const likeBtn = document.createElement("span");
+    likeBtn.classList.add("like-btn");
+
+    const likeIcon = document.createElement("i");
+    likeIcon.classList.add("fa-solid", "fa-thumbs-up");
+
+    const likeCount = document.createElement("span");
+    likeCount.classList.add("like-count");
+    likeCount.setAttribute("liked_post_counter", postId);
+    likeCount.textContent = "0";
+
+    likeBtn.append(likeIcon, likeCount);
+
+    // Dislike button
+    const dislikeBtn = document.createElement("span");
+    dislikeBtn.classList.add("dislike-btn");
+
+    const dislikeIcon = document.createElement("i");
+    dislikeIcon.classList.add("fa-solid", "fa-thumbs-down");
+
+    const dislikeCount = document.createElement("span");
+    dislikeCount.classList.add("dislike-count");
+    dislikeCount.setAttribute("disliked_post_counter", postId);
+    dislikeCount.textContent = "0";
+
+    dislikeBtn.append(dislikeIcon, dislikeCount);
+
+    // Comment button
+    const commentBtn = document.createElement("span");
+    commentBtn.classList.add("comment-btn");
+
+    const commentIcon = document.createElement("i");
+    commentIcon.classList.add("fa-solid", "fa-comment");
+
+    commentBtn.appendChild(commentIcon);
+
+    // Append buttons to footer
+    footer.append(likeBtn, dislikeBtn, commentBtn);
+
+    // Append everything to the article
+    article.append(header, h2, p, footer);
+
+    return article;
 }

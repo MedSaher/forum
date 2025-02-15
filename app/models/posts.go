@@ -96,6 +96,7 @@ func GetLikedPosts(userId int) (map[int]bool, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer db.Close()
 	liked := make(map[int]bool)
 	query := `SELECT PostID FROM Vote WHERE UserID = ? AND Value = 1 AND PostID IS NOT NULL`
 	rows, err := db.Query(query, userId)
@@ -120,6 +121,7 @@ func GetOwnedPosts(userId int) (map[int]bool, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer db.Close()
 	liked := make(map[int]bool)
 	query := `SELECT ID FROM Post WHERE AuthorID = ?`
 	rows, err := db.Query(query, userId)
@@ -136,4 +138,31 @@ func GetOwnedPosts(userId int) (map[int]bool, error) {
 		liked[postId] = true
 	}
 	return liked, nil
+}
+
+// Get a specific post by id:
+func GetSpecialPost(postId int) (*PostDTO, error) {
+	db, err := config.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var post PostDTO
+	query := `
+		SELECT 
+			Post.ID, Post.Title, Post.Content, Post.LikeCount, Post.DislikeCount, 
+			User.FirstName, User.LastName 
+		FROM Post 
+		INNER JOIN User ON Post.AuthorID = User.ID 
+		WHERE Post.ID = ?
+	`
+	err = db.QueryRow(query, postId).Scan(
+		&post.ID, &post.Title, &post.Content, &post.LikeCount, 
+		&post.DislikeCount, &post.AuthorFirstName, &post.AuthorLastName,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &post, nil
 }

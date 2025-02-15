@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"forum/app/models"
 )
@@ -95,16 +96,15 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 
 // A handler to get liked posts:
 func GetLikedPosts(wr http.ResponseWriter, rq *http.Request) {
-	
 	userId, err := models.GetUserIdFromSession(rq)
 	if err != nil {
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	liked, err := models.GetLikedPosts(userId)
 	if err != nil {
-	
+
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -112,13 +112,10 @@ func GetLikedPosts(wr http.ResponseWriter, rq *http.Request) {
 	json.NewEncoder(wr).Encode(liked)
 }
 
-
-
-
 // A handler to get owned posts:
 func GetOwnedPosts(wr http.ResponseWriter, rq *http.Request) {
 	userId, err := models.GetUserIdFromSession(rq)
-	fmt.Printf("user id : %v\n",  userId)
+	fmt.Printf("user id : %v\n", userId)
 	if err != nil {
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
@@ -134,5 +131,23 @@ func GetOwnedPosts(wr http.ResponseWriter, rq *http.Request) {
 
 // Get a special post:
 func GetSpecialPost(wr http.ResponseWriter, rq *http.Request) {
-	post, err := models.GetSpecialPost()
+	// Retrieve category name from the query parameters
+	post_id := rq.URL.Query().Get("post_id")
+	postId, err := strconv.Atoi(post_id)
+	if err != nil{
+		http.Error(wr, "Category is required", http.StatusBadRequest)
+		return
+	}
+	if postId <= 0 {
+		http.Error(wr, "Wrong post id", http.StatusBadRequest)
+		return
+	}
+	post, err := models.GetSpecialPost(postId)
+	if err != nil {
+		http.Error(wr, err.Error(), http.StatusBadRequest)
+		return
+	}
+	fmt.Println(post)
+	wr.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(wr).Encode(post)
 }
