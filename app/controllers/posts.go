@@ -38,7 +38,7 @@ func PostsHandler(w http.ResponseWriter, r *http.Request) {
 func AddPost(wr http.ResponseWriter, rq *http.Request) {
 	if rq.Method == http.MethodGet {
 		if err := Tmpl.ExecuteTemplate(wr, "post_form.html", nil); err != nil {
-			http.Error(wr, err.Error(), http.StatusInternalServerError)
+			http.Error(wr, err.Error(), http.StatusNotFound)
 			return
 		}
 		return
@@ -56,13 +56,13 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 	fmt.Println(categories)
 	session, er := models.GetSessionByUUID(cookie.Value)
 	if er != nil {
-		fmt.Println("Error:", err)
+		http.Error(wr, er.Error(), http.StatusInternalServerError)
 		return
 	}
 	uuid := session.UUID
 	user, Err := models.GetUserByTocken(uuid)
 	if Err != nil {
-		fmt.Println("Error:", Err)
+		http.Error(wr, Err.Error(), http.StatusInternalServerError)
 		return
 	}
 	fmt.Println(user)
@@ -86,8 +86,8 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 		}
 	}
 	// Respond with a success message
-	response := map[string]string{
-		"message": "User logged in successfully",
+	response := map[string]int{
+		"post_id": post_id,
 	}
 	wr.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(wr).Encode(response)
@@ -95,13 +95,16 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 
 // A handler to get liked posts:
 func GetLikedPosts(wr http.ResponseWriter, rq *http.Request) {
+	
 	userId, err := models.GetUserIdFromSession(rq)
 	if err != nil {
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	
 	liked, err := models.GetLikedPosts(userId)
 	if err != nil {
+	
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -129,3 +132,7 @@ func GetOwnedPosts(wr http.ResponseWriter, rq *http.Request) {
 	json.NewEncoder(wr).Encode(liked)
 }
 
+// Get a special post:
+func GetSpecialPost(wr http.ResponseWriter, rq *http.Request) {
+	post, err := models.GetSpecialPost()
+}

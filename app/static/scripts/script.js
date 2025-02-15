@@ -46,9 +46,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         await CreateComment(comment)
     })
 });
+
+
 // End of the main function...
-
-
 async function HandlePosts(logged) {
     // Fetch all existing posts:
     const main_content = document.getElementById("main-content");
@@ -246,7 +246,6 @@ async function FilterOwnedAndCreated(required) {
 
         allPosts.forEach((post) => {
             const postId = post.getAttribute("post_id");
-
             // Check if post ID exists in the likedPostIds object
             if (ownedPosts[postId]) {
                 post.style.display = "block"; // Show liked posts
@@ -268,7 +267,8 @@ async function addPost(data) {
         })
         if (response.ok) {
             const result = await response.json();
-            console.log("Post was added successfully: " + result.message);
+            console.log("Post was added successfully: -------------->>>" + result.post_id);
+          await fetchSpecificPost(result.post_id)
         } else {
             console.log("post creation has failed")
         }
@@ -631,5 +631,16 @@ async function VoteForComment(comment_id, vote) {
         }
     } catch (error) {
         console.error("Error:", error);
+    }
+}
+
+// fetch a specific post:
+async function fetchSpecificPost(post_id) {
+    try {
+       const response = await fetch(`http://localhost:8080/special_post?post_id=${post_id}`)
+        new_post = await response.json()
+        
+    }catch(error) {
+        console.error(error)
     }
 }

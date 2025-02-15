@@ -69,7 +69,7 @@ func GetAllPosts() ([]*PostDTO, error) {
     User.FirstName,
     User.LastName 
 FROM User 
-INNER JOIN Post ON User.ID = Post.AuthorID 
+INNER JOIN Post ON User.ID = Post.AuthorID ORDER BY Post.id DESC
 `
 
 	// Fetch Posts from the database
@@ -97,7 +97,7 @@ func GetLikedPosts(userId int) (map[int]bool, error) {
 		return nil, err
 	}
 	liked := make(map[int]bool)
-	query := `SELECT PostID FROM Vote WHERE UserID = ? AND Value = 1`
+	query := `SELECT PostID FROM Vote WHERE UserID = ? AND Value = 1 AND PostID IS NOT NULL`
 	rows, err := db.Query(query, userId)
 	if err != nil {
 		return nil, err
