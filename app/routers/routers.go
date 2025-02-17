@@ -47,28 +47,27 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			filePath := filepath.Join(dirPath, req.URL.Path[len(urlPath):])
 			// Normalize the file path
 			filePath = filepath.Clean(filePath)
-
 			// Ensure it's not a directory traversal attack
 			if strings.Contains(filePath, "..") {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
-
 			// Serve the static file
 			http.ServeFile(w, req, filePath)
 			return
 		}
 	}
-
 	// Check for dynamic routes
 	key := fmt.Sprintf("%s:%s", req.Method, req.URL.Path)
 	if handler, exists := r.routes[key]; exists {
 		handler(w, req)
 	} else {
-		http.NotFound(w, req) // Return 404 if route is not found
+		// http.NotFound(w, req) // Return 404 if route is not found
+		controllers.ErrorHandler(w, req, 404)
 	}
 }
 
+// RouteHandler adds routes to the router.
 // RouteHandler adds routes to the router.
 func (router *Router) MiddleWare() {
 	router.AddRoute("POST", "/register", controllers.RegisterUserHandler)
@@ -83,14 +82,11 @@ func (router *Router) MiddleWare() {
 	router.AddRoute("GET", "/add_post", controllers.AddPost)
 	router.AddRoute("POST", "/add_post", controllers.AddPost)
 	router.AddRoute("POST", "/vote_for_post", controllers.VoteForPost)
-	router.AddRoute("POST", "/post_categories", controllers.GetPostCategories)
-	router.AddRoute("GET", "/posts_by_category", controllers.GetPostsByCategory)
 	router.AddRoute("GET", "/liked", controllers.GetLikedPosts)
 	router.AddRoute("GET", "/owned", controllers.GetOwnedPosts)
 	router.AddRoute("GET", "/get_comments", controllers.GetComments)
-	router.AddRoute("POST", "/post_comments", controllers.CreateComment)
+	router.AddRoute("POST", "/post_comment", controllers.CreateComment)
 	router.AddRoute("POST", "/vote_for_comment", controllers.VoteForComment)
-	router.AddRoute("GET", "/special_post", controllers.GetSpecialPost)
 }
 
 // Add a middleware for static files:
@@ -98,7 +94,7 @@ func (router *Router) StaticMiddleWare() {
 	// Serve css static files:
 	router.AddStaticRoute("/app/static/css", "./app/static/css")
 	// Serve js static files:
-	router.AddStaticRoute("/app/static/scripts", "./app/static/scripts")
+	router.AddStaticRoute("/app/static/editjs", "./app/static/editjs")
 	// serve pictures:
 	router.AddStaticRoute("/app/uploads", "./app/uploads")
 }

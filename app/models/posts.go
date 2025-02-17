@@ -14,7 +14,6 @@ type Post struct {
 	LikeCount    int    `json:"likeCount"`
 	DislikeCount int    `json:"dislikeCount"`
 }
-
 type PostDTO struct {
 	ID              int    `json:"id"`
 	Title           string `json:"title"`
@@ -23,72 +22,94 @@ type PostDTO struct {
 	Timestamp       string `json:"time"`
 	LikeCount       int    `json:"likeCount"`
 	DislikeCount    int    `json:"dislikeCount"`
+	CategoryName    string `json:"categoryName"`
 	AuthorFirstName string `json:"authorFirstName"`
 	AuthorLastName  string `json:"authorLastName"`
 }
 
 // CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
 // ----->> Create a new Post:
-func CreatePost(title, content string, authorId int) (int, error) {
-	db, err := config.InitDB()
-	if err != nil {
-		return -1, err
-	}
-	defer db.Close()
-	query := `INSERT INTO Post (Title, Content, AuthorId)
-          VALUES (?, ?, ?)`
-	result, Err := db.Exec(query, title, content, authorId)
-	if Err != nil {
-		return -1, err
-	}
-
-	// Get the last inserted ID
-	lastID, er := result.LastInsertId()
-	if er != nil {
-		return -1, err
-	}
-	return int(lastID), nil
-}
-
-// Fetch all Posts:
-func GetAllPosts() ([]*PostDTO, error) {
+// CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
+// ----->> Create a new Post:
+func CreatePost(title, content string, authorId int) (*PostDTO, error) {
 	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
-	// The query:
-	query := `SELECT 
-    Post.ID, 
-    Title, 
-    Content, 
-    AuthorID, 
-    Timestamp, 
-    LikeCount, 
-    DislikeCount, 
-    User.FirstName,
-    User.LastName 
-FROM User 
-INNER JOIN Post ON User.ID = Post.AuthorID ORDER BY Post.id DESC
-`
 
-	// Fetch Posts from the database
-	rows, err := db.Query(query)
+	// Insert the new post into the Post table
+	query := `INSERT INTO Post (Title, Content, AuthorID)
+          VALUES (?, ?, ?)`
+	result, err := db.Exec(query, title, content, authorId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the last inserted ID
+	lastID, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch the newly inserted post details
+	query = `SELECT Post.ID, Title, Content, AuthorID, Timestamp, LikeCount, DislikeCount, 
+                    User.FirstName, User.LastName 
+             FROM Post
+             INNER JOIN User ON User.ID = Post.AuthorID
+             WHERE Post.ID = ?`
+
+	var post PostDTO
+	err = db.QueryRow(query, lastID).Scan(
+		&post.ID, &post.Title, &post.Content, &post.AuthorID,
+		&post.Timestamp, &post.LikeCount, &post.DislikeCount,
+		&post.AuthorFirstName, &post.AuthorLastName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the full post details including author and timestamp
+	return &post, nil
+}
+
+
+func GetAllPosts(page, limit int) ([]*PostDTO, error) {
+	db, err := config.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	offset := (page - 1) * limit
+	query := `SELECT 
+	    Post.ID, Title, Content, AuthorID, Timestamp, LikeCount, DislikeCount, 
+	    GROUP_CONCAT(DISTINCT Category.Name) AS Categories, 
+	    User.FirstName, User.LastName 
+	FROM Post 
+	INNER JOIN User ON User.ID = Post.AuthorID 
+	INNER JOIN PostCategory ON Post.ID = PostCategory.PostID 
+	INNER JOIN Category ON PostCategory.CategoryID = Category.ID 
+	GROUP BY Post.ID, Title, Content, AuthorID, Timestamp, LikeCount, DislikeCount, User.FirstName, User.LastName 
+	ORDER BY Post.ID DESC 
+	LIMIT ? OFFSET ?;`
+
+	rows, err := db.Query(query, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var Posts []*PostDTO
+	var posts []*PostDTO
 	for rows.Next() {
 		post := &PostDTO{}
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Timestamp, &post.LikeCount, &post.DislikeCount, &post.AuthorFirstName, &post.AuthorLastName); err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Timestamp, &post.LikeCount, &post.DislikeCount, &post.CategoryName, &post.AuthorFirstName, &post.AuthorLastName); err != nil {
 			return nil, err
 		}
-		Posts = append(Posts, post)
+		posts = append(posts, post)
 	}
-	return Posts, nil
+	return posts, nil
 }
+
 
 // // Get the liked posts from database:
 func GetLikedPosts(userId int) (map[int]bool, error) {
@@ -96,14 +117,12 @@ func GetLikedPosts(userId int) (map[int]bool, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 	liked := make(map[int]bool)
-	query := `SELECT PostID FROM Vote WHERE UserID = ? AND Value = 1 AND PostID IS NOT NULL`
+	query := `SELECT PostID FROM Vote WHERE UserID = ? AND Value = 1 AND PostID IS NOT NULL;`
 	rows, err := db.Query(query, userId)
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 	for rows.Next() {
 		var postId int
@@ -121,14 +140,12 @@ func GetOwnedPosts(userId int) (map[int]bool, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 	liked := make(map[int]bool)
 	query := `SELECT ID FROM Post WHERE AuthorID = ?`
 	rows, err := db.Query(query, userId)
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 	for rows.Next() {
 		var postId int
@@ -138,31 +155,4 @@ func GetOwnedPosts(userId int) (map[int]bool, error) {
 		liked[postId] = true
 	}
 	return liked, nil
-}
-
-// Get a specific post by id:
-func GetSpecialPost(postId int) (*PostDTO, error) {
-	db, err := config.InitDB()
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	var post PostDTO
-	query := `
-		SELECT 
-			Post.ID, Post.Title, Post.Content, Post.LikeCount, Post.DislikeCount, 
-			User.FirstName, User.LastName 
-		FROM Post 
-		INNER JOIN User ON Post.AuthorID = User.ID 
-		WHERE Post.ID = ?
-	`
-	err = db.QueryRow(query, postId).Scan(
-		&post.ID, &post.Title, &post.Content, &post.LikeCount, 
-		&post.DislikeCount, &post.AuthorFirstName, &post.AuthorLastName,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &post, nil
 }

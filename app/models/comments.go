@@ -1,64 +1,107 @@
 package models
 
 import (
-	"fmt"
+	"time"
 
 	"forum/app/config"
 )
 
-// comment model: [one to many with Comment] and [one to many with user]:
 type Comment struct {
+	ID           int       `json:"id"`
+	Content      string    `json:"content"`
+	AuthorID     int       `json:"authorId"`
+	PostID       int       `json:"postId"`
+	CommentID    int       `json:"commentId"`
+	Timestamp    time.Time `json:"timestamp"`
+	LikeCount    int       `json:"likeCount"`
+	DislikeCount int       `json:"dislikeCount"`
+}
+
+// Create a comment response structure
+type CommentDTO struct {
 	ID           int    `json:"id"`
 	Content      string `json:"content"`
-	AuthorID     int    `json:"authorId"`
-	PostID       int    `json:"postId"`
-	Timestamp    string `json:"timeStamp"`
+	Timestamp    string `json:"timestamp"`
 	LikeCount    int    `json:"likeCount"`
 	DislikeCount int    `json:"dislikeCount"`
+	FirstName    string `json:"firstName"`
+	LastName     string `json:"lastName"`
 }
-
-// CRUD (Create, Read, Update, Delete) operations between Go and SQLite3:
-// ----->> Create a new Comment:
-func CreateComment(content string, authorId, postId int) error {
-	db, err := config.InitDB()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	query := `INSERT INTO Comment (Content, AuthorId, PostID)
-          VALUES (?, ?, ?)`
-	_, err = db.Exec(query, content, authorId, postId)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Fetch all Comments
-func GetAllComments(post_id int) ([]*Comment, error) {
-	fmt.Println("Called")
+// Create a new comment:
+func CreateComment(content string, authorId, postId int) (*CommentDTO, error) {
 	db, err := config.InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 
-	// The query:
-	query := "SELECT * FROM Comment WHERE PostID = ?"
-	// Fetch Comments from the database
-	rows, err := db.Query(query, post_id)
+	query := `INSERT INTO Comment (Content, AuthorID, PostID, Timestamp, LikeCount, DislikeCount) VALUES (?, ?, ?, ?, 0, 0)`
+	result, err := db.Exec(query, content, authorId, postId, time.Now().Format(time.RFC3339))
+	if err != nil {
+		return nil, err
+	}
+
+	lastId, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	var comment CommentDTO
+	queryLastInsert := `
+		SELECT c.ID, c.Content, c.Timestamp, c.LikeCount, c.DislikeCount, u.FirstName, u.LastName 
+		FROM Comment c 
+		JOIN User u ON c.AuthorID = u.ID 
+		WHERE c.ID = ?
+	`
+
+	// Use QueryRow instead of Exec, and Scan properly
+	err = db.QueryRow(queryLastInsert, lastId).Scan(
+		&comment.ID, &comment.Content, &comment.Timestamp, 
+		&comment.LikeCount, &comment.DislikeCount, 
+		&comment.FirstName, &comment.LastName,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &comment, nil
+}
+
+
+func GetAllComments(postID int) ([]*CommentDTO, error) {
+	db, err := config.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+		SELECT c.ID, c.Content, c.Timestamp, c.LikeCount, c.DislikeCount, u.FirstName, u.LastName 
+		FROM Comment c 
+		JOIN User u ON c.AuthorID = u.ID 
+		WHERE c.PostID = ?
+		ORDER BY c.Timestamp DESC
+	`
+	rows, err := db.Query(query, postID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var Comments []*Comment
+	var comments []*CommentDTO
 	for rows.Next() {
-		comment := &Comment{}
-		if err := rows.Scan(&comment.ID, &comment.Content, &comment.AuthorID, &comment.PostID, &comment.Timestamp, &comment.LikeCount, &comment.DislikeCount); err != nil {
+		comment := &CommentDTO{}
+		var timestamp time.Time
+		if err := rows.Scan(&comment.ID, &comment.Content, &timestamp, &comment.LikeCount, &comment.DislikeCount, &comment.FirstName, &comment.LastName); err != nil {
 			return nil, err
 		}
-		Comments = append(Comments, comment)
+		comment.Timestamp = timestamp.Format(time.RFC3339)
+		comments = append(comments, comment)
 	}
-	return Comments, nil
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
 }

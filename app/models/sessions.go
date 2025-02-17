@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	// "fmt"
 	"net/http"
 	"time"
 
@@ -49,6 +51,7 @@ func GetSessionByUUID(uuid string) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer db.Close()
 	session := &Session{}
 	// Ensure we pass the address of each field, so the values can be scanned correctly
 	err = db.QueryRow("SELECT ID, UserID, UUID, ExpiresAt FROM Session WHERE UUID = ?", uuid).
@@ -59,22 +62,38 @@ func GetSessionByUUID(uuid string) (*Session, error) {
 		}
 		return nil, err
 	}
-	fmt.Println(session) // You can log the session to verify it's correct
+	// fmt.Println(session) // You can log the session to verify it's correct
 	return session, nil
 }
 
 // Delete session whe log_out:
-func DeleteSession(uuid string) error {
+func DeleteSessionByUUID(uuid string) error {
 	db, err := config.InitDB()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initialize database: %v", err)
 	}
-	_, err = db.Exec("DELETE FROM Session WHERE UUID = ?", uuid)
-	return err
+	defer db.Close() // Close the DB connection if it's a new one every time.
+
+	// Execute DELETE query
+	result, err := db.Exec("DELETE FROM Session WHERE UUID = ?", uuid)
+	if err != nil {
+		return fmt.Errorf("failed to delete session: %v", err)
+	}
+
+	// Check if a row was actually deleted
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check affected rows: %v", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no session found with UUID: %s", uuid)
+	}
+
+	return nil
 }
 
 // Get user id from session:
-func GetUserIdFromSession(rq *http.Request) (int, error){
+func GetUserIdFromSession(rq *http.Request) (int, error) {
 	cookie, err := rq.Cookie("session_token")
 	if err != nil {
 		return -1, err
@@ -89,4 +108,20 @@ func GetUserIdFromSession(rq *http.Request) (int, error){
 		return -1, err
 	}
 	return user.ID, nil
+}
+
+// Get session by user id:
+func GetSessionByUserID(userID int) (*Session, error) {
+	db, err := config.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	var session Session
+	err = db.QueryRow("SELECT ID, UserID, UUID, ExpiresAt FROM Session WHERE UserID = ? AND ExpiresAt > datetime('now')", userID).
+		Scan(&session.ID, &session.UserID, &session.UUID, &session.ExpiresAt)
+	if err != nil {
+		return nil, err
+	}
+	return &session, nil
 }

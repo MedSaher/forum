@@ -1,14 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeRoom - Forum</title>
-    <link rel="stylesheet" href="/app/static/css/posts.css">
-    <script defer src="/app/static/scripts/script.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="
+            default-src 'self'; 
+            style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; 
+            font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; 
+            script-src 'self' 'nonce-randomNonceHere';
+        ">
+        <title>WeRoom - Forum</title>
+        <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&family=Poppins:wght@100..900&display=swap"> -->
+        <link rel="stylesheet" href="/app/static/css/posts.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    
 <body>
     <header>
         <h1 class="forum-name">WeRoom</h1>
@@ -16,47 +22,63 @@
             <!-- User info will be injected here -->
         </div>
     </header>
+
     <nav class="categories" id="navbar">
         <!-- the posts will dynamically appears here  -->
     </nav>
-    <div class="container">
-        <!-- Registration Form -->
-        <div id="post_form" class="form-container active">
-            <h2 class="form-title">Create post</h2>
-            <form id="postForm">
-                <div class="form-group">
-                    <input type="text" class="form-control" id="post_title" name="post_title" placeholder="Post title" required>
-                </div>
 
-                <!-- Category Select Dropdown -->
-                <div class="category_select" id="select_categories"></div>
-
-                <div class="form-group">
-                    <textarea name="post_content" class="form-control" id="post_content" required></textarea>
-                </div>
-                <button type="submit" id="postSubmit" class="btn">Submit</button>
-            </form>
-            <div class="error-message" id="submition_error"></div>
-        </div>
-    </div>
     <main class="posts" id="main-content">
-        <!-- the posts will dynamically appears here  -->
+        <div class="container" id="createPost">
+            <!-- Registration Form -->
+            <div id="post_form" class="form-container active">
+                <h2 class="form-title">Create post</h2>
+                <form id="postForm">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="post_title" name="post_title" placeholder="Post title" required>
+                    </div>
+                    <!-- Category Select Dropdown -->
+                    <div class="form-group" id="select_categories"></div>
+                    <div class="form-group">
+                        <textarea name="post_content" class="form-control" id="post_content" required></textarea>
+                    </div>
+                    <button type="submit" id="postSubmit" class="btn">Submit</button>
+                </form>
+                <div class="error-message" id="submition_error"></div>
+            </div>
+        </div>
+
         <!-- Comment Modal -->
         <div id="commentModal" class="modal">
             <div class="modal-content">
                 <span class="close-btn" id="close-btn">&times;</span>
                 <h2 id="modalPostTitle"></h2>
                 <p id="modalPostContent"></p>
-                <form id="commentForm">
-                    <textarea id="commentBox" name="comment" placeholder="Write your comment..." required></textarea>
-                    <button type="submit" id="submitCommentBtn">Submit</button>
-                </form>
+                <textarea id="commentBox" placeholder="Write your comment..."></textarea>
+                <button id="submitCommentBtn">Submit</button>
                 <div id="commentsList">
-                    <!-- Comments will be added dynamically -->
+                    <!-- the comments will appear here dynamically  -->
                 </div>
             </div>
-        </div>        
-    </main>
-</body>
+        </div>
 
+        <!-- Registration Success Modal -->
+        <div id="registrationModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" id="closeModal">&times;</span>
+                <h2>Registration Status</h2>
+                <p id="modalMessage"></p>
+                <button id="modalOkBtn" class="btn">OK</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts with nonce -->
+    <script nonce="randomNonceHere" src="app/static/editjs/profile.js" defer></script>
+    <script nonce="randomNonceHere" src="app/static/editjs/categories.js" defer></script>
+    <script nonce="randomNonceHere" src="app/static/editjs/posts.js" defer></script>
+    <script nonce="randomNonceHere" src="app/static/editjs/postActions.js" defer></script>
+    <script nonce="randomNonceHere" src="app/static/editjs/filters.js" defer></script>
+    <script nonce="randomNonceHere" src="app/static/editjs/addpost.js" defer></script>
+    <script nonce="randomNonceHere" src="app/static/editjs/main.js" defer></script>
+</body>
 </html>

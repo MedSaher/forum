@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
+	"html"
 	"html/template"
 	"io"
 	"log"
@@ -30,27 +30,22 @@ func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
 	users, err := models.GetAllUsers()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
 }
 
 // Register a new user to my app:
 func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Happened")
-	fmt.Println(r.Method)
 	// Check if the request is a GET request. If so, render the form for user registration.
 	if r.Method == http.MethodGet {
 		Tmpl.ExecuteTemplate(w, "user.html", nil)
 		return
 	}
-
 	// Parse the multipart form with a maximum memory of 10MB for uploaded files.
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
@@ -58,19 +53,17 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
-
 	// Extract form values for user details.
-	firstName := strings.TrimSpace(r.FormValue("firstName")) // Remove leading/trailing spaces
-	lastName := strings.TrimSpace(r.FormValue("lastName"))
-	email := strings.TrimSpace(r.FormValue("email"))
+	// Extract and sanitize form values.
+	firstName := html.EscapeString(strings.TrimSpace(r.FormValue("firstName")))
+	lastName := html.EscapeString(strings.TrimSpace(r.FormValue("lastName")))
+	email := html.EscapeString(strings.TrimSpace(r.FormValue("email")))
 	password := r.FormValue("password") // No need to trim spaces from passwords.
-
 	// Validate required fields to ensure none are empty.
 	if firstName == "" || lastName == "" || email == "" || password == "" {
 		http.Error(w, "All fields are required", http.StatusBadRequest)
 		return
 	}
-
 	// Check if the email already exists in the database.
 	exists, err := models.CheckEmailExists(email)
 	if err != nil {
@@ -82,7 +75,6 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Email already registered", http.StatusConflict)
 		return
 	}
-
 	// Retrieve the uploaded profile picture file.
 	file, handler, err := r.FormFile("profilePicture")
 	if err != nil {
@@ -91,13 +83,11 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close() // Ensure the file is closed after processing.
-
 	// Validate the file type to allow only JPG, JPEG, or PNG files.
 	if !isAllowedFileType(handler.Filename) {
 		http.Error(w, "Invalid file type. Only jpg, jpeg, png allowed", http.StatusBadRequest)
 		return
 	}
-
 	// Define the directory where uploaded files will be saved.
 	uploadDir := "./app/uploads"
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
@@ -106,7 +96,6 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 			log.Fatalf("Failed to create upload directory: %v", err)
 		}
 	}
-
 	// Define the full path where the file will be saved.
 	filePath := filepath.Join(uploadDir, handler.Filename)
 	destFile, err := os.Create(filePath) // Create the file on the server.
@@ -116,7 +105,6 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer destFile.Close() // Ensure the file is closed after writing.
-
 	// Save the file content to the newly created file.
 	_, err = io.Copy(destFile, file)
 	if err != nil {
@@ -124,7 +112,6 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error saving file", http.StatusInternalServerError)
 		return
 	}
-
 	// Hash the user's password for secure storage in the database.
 	hashedPassword, err := utils.GenerateCryptoPassword(password)
 	if err != nil {
@@ -133,7 +120,6 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
-
 	// Create a new user object with all the required fields.
 	user := &models.User{
 		FirstName:      firstName,
@@ -142,10 +128,6 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		PasswordHash:   string(hashedPassword), // Save the hashed password.
 		ProfilePicture: handler.Filename,       // Store the file's relative path.
 	}
-	fmt.Println(user)
-	// Log the user data for debugging purposes.
-	log.Printf("Attempting to save user: %+v", user)
-
 	// Save the user to the database.
 	if err := models.CreateUser(user); err != nil {
 		log.Printf("Error saving user to database: %v", err)
@@ -154,9 +136,6 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
-
-	// Log success and send a response back to the client.
-	log.Println("User successfully registered.")
 	response := map[string]string{
 		"message":   "User registered successfully",
 		"image_url": user.ProfilePicture,
@@ -177,57 +156,60 @@ func isAllowedFileType(filename string) bool {
 
 // LoginHandler handles user login requests
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	// Check if the request is a GET request. If so, render the form for user registration.
-	if r.Method == http.MethodGet {
-		Tmpl.ExecuteTemplate(w, "user.html", nil)
-		return
-	}
-	credentials := &Credentials{}
-	// Parse the JSON request body
-	if err := json.NewDecoder(r.Body).Decode(credentials); err != nil {
-		fmt.Println("Error decoding credentials.")
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	// Fetch user by email
-	user, err := models.GetUserByEmail(credentials.Email)
-	if err != nil {
-		fmt.Println("Error with email")
-		http.Error(w, "Invalid email or password: "+err.Error(), http.StatusUnauthorized)
-		return
-	}
-	// Validate password
-	if !utils.ValidatePassword(user.PasswordHash, credentials.Password) {
-		fmt.Println("Error with password")
-		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
-		return
-	}
+    if r.Method == http.MethodGet {
+        Tmpl.ExecuteTemplate(w, "user.html", nil)
+        return
+    }
 
-	// Create a new session for the user
-	session, err := CreateSession(user.ID, 24*time.Hour)
-	if err != nil {
-		fmt.Println("error: session creation.")
-		http.Error(w, "Failed to create session", http.StatusInternalServerError)
-		return
-	}
+    credentials := &Credentials{}
+    if err := json.NewDecoder(r.Body).Decode(credentials); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
 
-	// Set a secure session cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    session.UUID,
-		Expires:  session.ExpiresAt,
-		HttpOnly: true,         // Prevent JavaScript access
-		Secure:   r.TLS != nil, // Enforce HTTPS
-		Path:     "/",     // Apply cookie site-wide
-	})
+    // Fetch user by email
+    user, err := models.GetUserByEmail(credentials.Email)
+    if err != nil {
+        http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+        return
+    }
 
-	// Respond with a success message
-	response := map[string]string{
-		"message":   "User logged in successfully",
-		"user_name": user.FirstName,
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+    // Check if the user already has an active session
+    existingSession, err := models.GetSessionByUserID(user.ID)
+    if err == nil && existingSession.ExpiresAt.After(time.Now()) {
+        http.Error(w, "User is already logged in from another device", http.StatusConflict)
+        return
+    }
+
+    // Validate password
+    if !utils.ValidatePassword(user.PasswordHash, credentials.Password) {
+        http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+        return
+    }
+
+    // Create a new session
+    session, err := CreateSession(user.ID, 24*time.Hour)
+    if err != nil {
+        http.Error(w, "Failed to create session", http.StatusInternalServerError)
+        return
+    }
+
+    // Set a secure session cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "session_token",
+        Value:    session.UUID,
+        Expires:  session.ExpiresAt,
+        HttpOnly: true,
+        Secure:   r.TLS != nil,
+        Path:     "/",
+    })
+
+    response := map[string]string{
+        "message":   "User logged in successfully",
+        "user_name": user.FirstName,
+    }
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(response)
 }
 
 
@@ -238,22 +220,18 @@ func LogedInUser(wr http.ResponseWriter, rq *http.Request) {
 		// Handle error (e.g., cookie not found)
 		wr.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(wr).Encode(nil)
-		fmt.Println("Error:", err)
 		return
 	}
 	session, er := models.GetSessionByUUID(cookie.Value)
 	if er != nil {
-		fmt.Println("Error:", err)
 		return
 	}
 	// fmt.Println(session.UUID)
 	uuid := session.UUID
 	user, Err := models.GetUserByTocken(uuid)
 	if Err != nil {
-		fmt.Println("Error:", Err)
 		return
 	}
-
 	// Respond with a success message
 	response := map[string]string{
 		"message":     "User logged in successfully",
@@ -264,4 +242,3 @@ func LogedInUser(wr http.ResponseWriter, rq *http.Request) {
 	wr.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(wr).Encode(response)
 }
-

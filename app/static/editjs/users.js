@@ -1,27 +1,39 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Toggle between login and registration forms
     const showLogin = document.getElementById('showLogin');
     const showRegister = document.getElementById('showRegister');
+    const go_home = document.getElementById('go_home');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
 
-    showLogin.addEventListener('click', function(e) {
+    showLogin.addEventListener('click', function (e) {
         e.preventDefault();
         loginForm.classList.add('active');
         registerForm.classList.remove('active');
     });
 
-    showRegister.addEventListener('click', function(e) {
+    showRegister.addEventListener('click', function (e) {
         e.preventDefault();
         registerForm.classList.add('active');
         loginForm.classList.remove('active');
     });
 
+    go_home.addEventListener("click", (e) => {
+        e.preventDefault(); 
+        window.location.href = "/";
+    });
+    
+
     // Registration form handling
     const registrationForm = document.getElementById('registrationForm');
-    registrationForm.addEventListener("submit", async(e) => {
-        e.preventDefault();
+    const modal = document.getElementById('registrationModal');
+    const modalMessage = document.getElementById('modalMessage');
+    const closeModal = document.getElementById('closeModal');
+    const modalOkBtn = document.getElementById('modalOkBtn');
 
+    // Form submission event listener
+    registrationForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
         clearErrors(); // Clear previous errors
 
         const formData = new FormData(registrationForm);
@@ -37,23 +49,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (response.ok) {
                 const result = await response.json();
-                alert("Registration successful: " + result.message);
-                window.location.href = '/'; // Redirect after registration
+                showModal("Registration successful: " + result.message, true);
             } else {
-                showError('registrationError', 'Registration failed');
+                showModal("Registration failed", false);
             }
+            if (response.status === 404) {
+                // Store the status in sessionStorage
+                sessionStorage.setItem("errorStatus", response.status);
+        
+                // Redirect to error page
+                window.location.href = "/error.html";
+              }
         } catch (error) {
             console.error("Error:", error);
-            showError('registrationError', 'An error occurred');
+            showModal("An error occurred", false);
         }
     });
 
+    // Function to display modal
+    function showModal(message, success) {
+        modalMessage.textContent = message;
+        modal.style.display = "flex";
+
+        modalOkBtn.onclick = () => {
+            modal.style.display = "none";
+            if (success) window.location.href = '/'; // Redirect only on success
+        };
+    }
+
+    // Close modal on clicking "X" button
+    closeModal.onclick = () => {
+        modal.style.display = "none";
+    };
+
+    // Close modal if user clicks outside the modal content
+    window.onclick = (e) => {
+        if (e.target === modal) modal.style.display = "none";
+    };
+
     // Login form handling
     const loginFormElement = document.getElementById('loginFormElement');
-    loginFormElement.addEventListener('submit', async function(e) {
-        e.preventDefault();
 
-        clearErrors();
+    loginFormElement.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearErrors(); // Clear previous errors
 
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
@@ -78,17 +117,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 if (response.ok) {
-                    window.location.href = '/';
+                    window.location.href = '/'; // Redirect on success
                 } else {
                     const errorText = await response.text();
-                    showError('loginError', errorText);
+                    showModal(errorText, false); // Show error in modal
                 }
+                if (response.status === 404) {
+                    // Store the status in sessionStorage
+                    sessionStorage.setItem("errorStatus", response.status);
+            
+                    // Redirect to error page
+                    window.location.href = "/error.html";
+                  }
             } catch (error) {
                 console.error('Error during login:', error.message);
-                showError('loginError', 'An unexpected error occurred');
+                showModal('An unexpected error occurred', false);
             }
         }
     });
+
+    // Function to display modal
+    function showModal(message, success) {
+        modalMessage.textContent = message;
+        modal.style.display = "flex";
+
+        modalOkBtn.onclick = () => {
+            modal.style.display = "none";
+            if (success) window.location.href = '/'; // Redirect only on success
+        };
+    }
+
+    // Close modal on clicking "X" button
+    closeModal.onclick = () => {
+        modal.style.display = "none";
+    };
+
+    // Close modal if user clicks outside the modal content
+    window.onclick = (e) => {
+        if (e.target === modal) modal.style.display = "none";
+    };
 });
 
 // Validate registration inputs
@@ -133,7 +200,7 @@ function showError(elementId, errorMessage) {
         element.textContent = errorMessage;
         element.style.display = 'block';
     } else {
-        alert(errorMessage);
+        showModal(errorMessage);
     }
 }
 

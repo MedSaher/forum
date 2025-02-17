@@ -28,7 +28,7 @@ func main() {
 		}
 		file.Close()
 	}
-	log.Println("Database schema initialized successfully")
+
 	// Parse the static files:
 	controllers.Tmpl, err = template.ParseGlob("./app/views/*.html")
 	if err != nil {

@@ -2,25 +2,41 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
+	"html"
 	"net/http"
 	"strconv"
 
 	"forum/app/models"
 )
 
-// Get all users:
 func GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	// Fetch books from the database
-	posts, err := models.GetAllPosts()
+
+	// Read pagination parameters from query
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	// Convert them to integers (default: page = 1, limit = 10)
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	// Fetch paginated posts from the database
+	posts, err := models.GetAllPosts(page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	// Set headers and encode response
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
@@ -35,63 +51,65 @@ func PostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Add a newpost:
+// Post represents the structure of a post in the system.
+// AddPost function to create a new post and send the newly created post as a response.
 func AddPost(wr http.ResponseWriter, rq *http.Request) {
 	if rq.Method == http.MethodGet {
 		if err := Tmpl.ExecuteTemplate(wr, "post_form.html", nil); err != nil {
-			http.Error(wr, err.Error(), http.StatusNotFound)
+			http.Error(wr, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		return
 	}
 
+	// Get session token from cookie
 	cookie, err := rq.Cookie("session_token")
 	if err != nil {
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	title := rq.FormValue("post_title")
-	content := rq.FormValue("post_content")
+
+	// Retrieve form values
+	title := html.EscapeString(rq.FormValue("post_title"))
+	content := html.EscapeString(rq.FormValue("post_content"))
 	categories := rq.Form["chosen_categories[]"] // Retrieves multiple values
 
-	fmt.Println(categories)
-	session, er := models.GetSessionByUUID(cookie.Value)
-	if er != nil {
-		http.Error(wr, er.Error(), http.StatusInternalServerError)
-		return
-	}
-	uuid := session.UUID
-	user, Err := models.GetUserByTocken(uuid)
-	if Err != nil {
-		http.Error(wr, Err.Error(), http.StatusInternalServerError)
-		return
-	}
-	fmt.Println(user)
-	// Create the post in the database:
-	post_id, err := models.CreatePost(title, content, user.ID)
+	// Get session details
+	session, err := models.GetSessionByUUID(cookie.Value)
 	if err != nil {
-		fmt.Println("Error:", er)
+		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Get user details
+	user, err := models.GetUserByTocken(session.UUID)
+	if err != nil {
+		http.Error(wr, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Create the post in the database and fetch post details
+	newPost, err := models.CreatePost(title, content, user.ID)
+	if err != nil {
+		http.Error(wr, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Link post to categories
 	for _, category := range categories {
-		category_id, er := models.GetCategoryId(category)
-		if er != nil {
-			fmt.Println("Error:", er)
+		categoryID, err := models.GetCategoryId(category)
+		if err != nil {
+			http.Error(wr, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// link the new inserted post to its category in database:
-		if err := models.LinkPostToCategory(post_id, category_id); err != nil {
-			fmt.Println("Error:", er)
+		if err := models.LinkPostToCategory(newPost.ID, categoryID); err != nil {
+			http.Error(wr, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
-	// Respond with a success message
-	response := map[string]int{
-		"post_id": post_id,
-	}
+	// Respond with new post details
 	wr.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(wr).Encode(response)
+	json.NewEncoder(wr).Encode(newPost)
 }
 
 // A handler to get liked posts:
@@ -101,10 +119,8 @@ func GetLikedPosts(wr http.ResponseWriter, rq *http.Request) {
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	liked, err := models.GetLikedPosts(userId)
 	if err != nil {
-
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -115,7 +131,6 @@ func GetLikedPosts(wr http.ResponseWriter, rq *http.Request) {
 // A handler to get owned posts:
 func GetOwnedPosts(wr http.ResponseWriter, rq *http.Request) {
 	userId, err := models.GetUserIdFromSession(rq)
-	fmt.Printf("user id : %v\n", userId)
 	if err != nil {
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
@@ -127,27 +142,4 @@ func GetOwnedPosts(wr http.ResponseWriter, rq *http.Request) {
 	}
 	wr.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(wr).Encode(liked)
-}
-
-// Get a special post:
-func GetSpecialPost(wr http.ResponseWriter, rq *http.Request) {
-	// Retrieve category name from the query parameters
-	post_id := rq.URL.Query().Get("post_id")
-	postId, err := strconv.Atoi(post_id)
-	if err != nil{
-		http.Error(wr, "Category is required", http.StatusBadRequest)
-		return
-	}
-	if postId <= 0 {
-		http.Error(wr, "Wrong post id", http.StatusBadRequest)
-		return
-	}
-	post, err := models.GetSpecialPost(postId)
-	if err != nil {
-		http.Error(wr, err.Error(), http.StatusBadRequest)
-		return
-	}
-	fmt.Println(post)
-	wr.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(wr).Encode(post)
 }

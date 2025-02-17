@@ -1,8 +1,6 @@
 package models
 
 import (
-	"fmt"
-
 	"forum/app/config"
 )
 
@@ -23,7 +21,7 @@ func GetAllCategories() ([]*Category, error) {
 	query := "SELECT ID, Name, Description FROM Category"
 	rows, err := db.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query categories: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -31,13 +29,13 @@ func GetAllCategories() ([]*Category, error) {
 	for rows.Next() {
 		category := &Category{}
 		if err := rows.Scan(&category.ID, &category.Name, &category.Description); err != nil {
-			return nil, fmt.Errorf("failed to scan category: %w", err)
+			return nil, err
 		}
 		categories = append(categories, category)
 	}
 	// Check for any errors encountered during iteration
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating through rows: %w", err)
+		return nil, err
 	}
 	return categories, nil
 }
@@ -75,63 +73,4 @@ func LinkPostToCategory(postId, categoryId int) error {
 		return er
 	}
 	return nil
-}
-
-// Get all categories in relation to a post:
-func GetPostCategories(Post_id int) ([]*Category, error) {
-	db, err := config.InitDB()
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-	query := `
-	SELECT Category.ID, Category.Name, Category.Description 
-	FROM Post 
-	INNER JOIN PostCategory ON Post.ID = PostCategory.PostID 
-	INNER JOIN Category ON Category.ID = PostCategory.CategoryID 
-	WHERE Post.ID = ?;
-	`
-	rows, err := db.Query(query, Post_id)
-	if err != nil {
-		fmt.Println("happened")
-		return nil, err
-	}
-	defer rows.Close() // Close rows
-	categories := []*Category{}
-	for rows.Next() {
-		category := &Category{}
-		if err := rows.Scan(&category.ID, &category.Name, &category.Description); err != nil {
-			return nil, err
-		}
-		categories = append(categories, category)
-	}
-	return categories, nil
-}
-
-// Filter post based on category:
-func GetPostCategoriesId(category string) (map[int]bool, error) {
-	db, err := config.InitDB()
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-	query := `
-		SELECT p.ID FROM Post p
-		JOIN PostCategory pc ON p.ID = pc.PostID
-		JOIN Category c ON pc.CategoryID = c.ID
-		WHERE c.Name = ?`
-	rows, err := db.Query(query, category)
-	if err != nil {
-		return nil, err
-	}
-	posts := make(map[int]bool)
-	defer rows.Close()
-	for rows.Next() {
-		var postId int
-		if err := rows.Scan(&postId); err != nil {
-			return nil, err
-		}
-		posts[postId] = true
-	}
-	return posts, nil
 }

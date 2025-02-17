@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"forum/app/config"
 
@@ -31,7 +30,6 @@ func GetUserByID(id string) (*User, error) {
 		SELECT id, first_name, last_name, email, password_hash, profile_picture 
 		FROM User
 		WHERE id = ?`
-
 	err = db.QueryRow(query, id).Scan(
 		user.ID,
 		user.FirstName,
@@ -46,7 +44,6 @@ func GetUserByID(id string) (*User, error) {
 		}
 		return nil, err
 	}
-
 	return user, nil
 }
 
@@ -58,12 +55,10 @@ func UserExists(id string) (bool, error) {
 	}
 	var exists bool
 	query := "SELECT EXISTS(SELECT 1 FROM users WHERE id = ?)"
-
 	err = db.QueryRow(query, id).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
-
 	return exists, nil
 }
 
@@ -88,23 +83,19 @@ func CreateUser(user *User) error {
 		return err
 	}
 	defer db.Close()
-
 	query := `INSERT INTO User (FirstName, LastName, Email, PasswordHash, ProfilePicture)
 	          VALUES (?, ?, ?, ?, ?)`
-
 	// Execute the query and get the result
 	result, err := db.Exec(query, user.FirstName, user.LastName, user.Email, user.PasswordHash, user.ProfilePicture)
 	if err != nil {
 		return err
 	}
-
 	// Retrieve the auto-generated ID
 	id, err := result.LastInsertId()
 	if err != nil {
 		return err
 	}
 	user.ID = int(id) // Update the user struct with the auto-generated ID
-	fmt.Println(user)
 	return nil
 }
 
@@ -121,7 +112,6 @@ func GetAllUsers() ([]*User, error) {
 		return nil, err
 	}
 	defer rows.Close()
-
 	var Users []*User
 	for rows.Next() {
 		user := &User{}
@@ -141,7 +131,6 @@ func CheckEmailExists(email string) (bool, error) {
 	}
 	var exists bool
 	query := "SELECT EXISTS(SELECT 1 FROM User WHERE email = ?)"
-
 	err = db.QueryRow(query, email).Scan(&exists)
 	if err != nil {
 		return false, err
@@ -156,7 +145,6 @@ func GetUserByEmail(email string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(email)
 	query := "SELECT * FROM User WHERE email = ? "
 	err = db.QueryRow(query, email).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash, &user.ProfilePicture)
 	if err != nil {

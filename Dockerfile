@@ -1,5 +1,5 @@
 # Step 1: Use the official Go image to build the application
-FROM golang:1.21 AS build
+FROM golang:1.21
 
 # Step 2: Set the working directory for your Go app inside the container
 WORKDIR /app
@@ -14,25 +14,7 @@ RUN go mod tidy
 COPY . .
 
 # Step 6: Build the Go application binary
-RUN go build -o /go-app .
-
-# Step 7: Create a new image to run the application
-FROM ubuntu:latest
-
-# Step 8: Install required dependencies for running Go binary (if necessary)
-RUN apt-get update && \
-    apt-get install -y sqlite3
-
-# Step 9: Set the working directory
-WORKDIR /go-app
-
-# Step 10: Copy the Go binary from the build stage and frontend files
-COPY --from=build /go-app /go-app
-COPY ./app /go-app/app
-COPY ./forum.db /go-app/forum.db
-COPY ./app/uploads /go-app/app/uploads
-COPY ./app/static/css /go-app/app/static/css
-COPY ./app/static/scripts /go-app/app/static/scripts
+RUN go build -o go-app .
 
 # Step 11: Expose the port the Go app will run on
 EXPOSE 8080

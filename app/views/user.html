@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Authentication</title>
     <link rel="stylesheet" href="/app/static/css/index.css">
-    <script src="/app/static/scripts/users.js"></script>
 </head>
 
 <body>
@@ -41,7 +40,8 @@
                 <button type="submit" class="btn">Register Now</button>
             </form>
             <div class="toggle-form">
-                Already have an account? <a href="#" id="showLogin">Login now</a>
+               <a href="#" id="showLogin"><span>Already have an account? </span> Login now</a>
+                <a href="/" id="go_home">Home</a>
             </div>
         </div>
 
@@ -59,12 +59,26 @@
                     <div class="error-message" id="loginPasswordError"></div>
                 </div>
                 <button type="submit" class="btn">Login</button>
+
             </form>
             <div class="toggle-form">
-                Don't have an account? <a href="#" id="showRegister">Register now</a>
+                <a href="#" id="showRegister"><span>Don't have an account?</span>Register now</a>
+                <a href="/" id="go_home">Home</a>
             </div>
         </div>
     </div>
+
+    <!-- Registration Success Modal -->
+    <div id="registrationModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h2>Registration Status</h2>
+            <p id="modalMessage"></p>
+            <button id="modalOkBtn" class="btn">OK</button>
+        </div>
+    </div>
+
+    <script src="/app/static/editjs/users.js"></script>
 </body>
 
 </html>

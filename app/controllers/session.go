@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -28,15 +27,22 @@ func CreateSession(userId int, expiration time.Duration) (*models.Session, error
 	return session, nil
 }
 
-// Logout and kill the session:
 func Logout(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
+    // Get session token from cookie
+    cookie, err := r.Cookie("session_token")
+    if err != nil {
         http.Error(w, "No active session", http.StatusBadRequest)
         return
     }
-	fmt.Println(cookie)
-    // Expire the cookie
+
+    // Delete session from the database
+    err = models.DeleteSessionByUUID(cookie.Value)
+    if err != nil {
+        http.Error(w, "Failed to logout", http.StatusInternalServerError)
+        return
+    }
+
+    // Expire the session cookie
     http.SetCookie(w, &http.Cookie{
         Name:     "session_token",
         Value:    "",
@@ -45,7 +51,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
         Path:     "/",
     })
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message": "Logged out successfully"}`))
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(`{"message": "Logged out successfully"}`))
 }
-

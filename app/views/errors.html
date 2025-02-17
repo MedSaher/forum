@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Page</title>
+    <link rel="stylesheet" href="/app/static/css/errors.css">
+</head>
+<body>
+    <div class="error-container">
+        <svg class="error-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12z"></path>
+            <path d="M12 14a1 1 0 0 1-1-1V7a1 1 0 1 1 2 0v6a1 1 0 0 1-1 1zm0 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"></path>
+        </svg>
+        <h1 class="error-title">Oops! Something went wrong</h1>
+        <p class="error-message">Please try again later or contact support if the problem persists.</p>
+        <button class="back-button" onclick="goBack()">Go Back</button>
+    </div>
+    <script src="/app/static/editjs/errors.js"></script>
+</body>
+</html>
