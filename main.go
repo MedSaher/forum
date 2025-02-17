@@ -6,9 +6,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"forum/app/config"
 	"forum/app/controllers"
+	"forum/app/models"
 	"forum/app/routers"
 )
 
@@ -28,7 +31,8 @@ func main() {
 		}
 		file.Close()
 	}
-
+	closeDB := make(chan os.Signal, 1)
+	go closeDBFunc(closeDB)
 	// Parse the static files:
 	controllers.Tmpl, err = template.ParseGlob("./app/views/*.html")
 	if err != nil {
@@ -44,4 +48,11 @@ func main() {
 
 	fmt.Println("run: http://localhost:8080/")
 	log.Fatal(http.ListenAndServe(":8080", router))
+}
+
+func closeDBFunc(closeChan chan os.Signal) {
+	signal.Notify(closeChan, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	<-closeChan
+	models.DeleteAllSessions()
+	os.Exit(0)
 }

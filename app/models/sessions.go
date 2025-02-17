@@ -125,3 +125,12 @@ func GetSessionByUserID(userID int) (*Session, error) {
 	}
 	return &session, nil
 }
+
+func DeleteAllSessions() {
+	db, err := config.InitDB()
+	if err == nil {
+		db.Exec("DELETE FROM Session")
+	}
+	defer db.Close()
+	
+}
