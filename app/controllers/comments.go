@@ -46,7 +46,7 @@ func CreateComment(wr http.ResponseWriter, rq *http.Request) {
 	// Create a comment in the database:
 	commentDTO, Err := models.CreateComment(comment.Content, userId, comment.PostID)
 	if Err != nil {
-		http.Error(wr, err.Error(), http.StatusInternalServerError)
+		http.Error(wr, Err.Error(), http.StatusInternalServerError)
 		return
 	}
 	wr.Header().Set("Content-Type", "application/json")

@@ -42,7 +42,6 @@ post_form.addEventListener("submit", async function (e) {
             }
         } else {
             const post = await response.json(); // Get post details
-            // console.log(post)
             // Dynamically create and add the new post to the page
             const postId = document.createElement("input")
             postId.type = "hidden"
@@ -101,7 +100,7 @@ post_form.addEventListener("submit", async function (e) {
             post_form.reset()
         }
     } catch (error) {
-        console.error("Error:", error);
-        showModal("An error occurred: " + error.message);
+        console.error("Error:", error.message);
+        showModal("An error occurred: Creating a post.");
     }
 });

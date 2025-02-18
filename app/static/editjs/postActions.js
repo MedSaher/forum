@@ -255,6 +255,10 @@ async function CreateComment(comm) {
             body: JSON.stringify(comm)
         }
         )
+        if (response.status == 502) {
+            window.location.href = "/login";
+            return
+        }
         if (!response.ok) {
             showModal("Error creating a comment!")
         } else {

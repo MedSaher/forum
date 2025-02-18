@@ -5,6 +5,7 @@ import (
 	"html"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"forum/app/models"
 )
@@ -70,9 +71,21 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 	}
 
 	// Retrieve form values
-	title := html.EscapeString(rq.FormValue("post_title"))
-	content := html.EscapeString(rq.FormValue("post_content"))
+	title := strings.TrimSpace(html.EscapeString(rq.FormValue("post_title")))
+	content := strings.TrimSpace(html.EscapeString(rq.FormValue("post_content")))
 	categories := rq.Form["chosen_categories[]"] // Retrieves multiple values
+	if title == "" || content == "" {
+		http.Error(wr, "Pleasr fill in all the fields", http.StatusBadRequest)
+		return
+	}
+
+	for _, cat := range categories {
+		cat = strings.TrimSpace(cat)
+		if cat == "" {
+			http.Error(wr, "Pleasr fill in all the fields", http.StatusBadRequest)
+			return
+		}
+	}
 
 	// Get session details
 	session, err := models.GetSessionByUUID(cookie.Value)

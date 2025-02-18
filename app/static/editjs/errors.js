@@ -1,6 +1,6 @@
 // Function to go back to previous page
 function goBack() {
-    window.history.back();
+    window.location.href = "/";;
 }
 window.onload = function() {
     // Retrieve stored error details
@@ -13,6 +13,5 @@ window.onload = function() {
         document.querySelector('.error-title').textContent = title;
         document.querySelector('.error-message').textContent = message;
     }
-
     showModal("Error Status:", status); // Debugging
 };
