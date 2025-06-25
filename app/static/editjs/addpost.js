@@ -63,7 +63,8 @@ post_form.addEventListener("submit", async function (e) {
             const category = document.createElement("span");
             category.classList.add("post-category");
             category.textContent = post.categoryName;
-
+            console.log(category);
+            
             const timestamp = document.createElement("span");
             timestamp.classList.add("post-time");
             timestamp.textContent = new Date(post.time).toLocaleString();

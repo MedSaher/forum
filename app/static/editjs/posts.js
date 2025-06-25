@@ -36,6 +36,7 @@ async function fetchPosts() {
             const category = document.createElement("span");
             category.classList.add("post-category");
             category.textContent = post.categoryName;
+            
 
             const timestamp = document.createElement("span");
             timestamp.classList.add("post-time");
