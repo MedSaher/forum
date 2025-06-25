@@ -19,10 +19,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     go_home.addEventListener("click", (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
         window.location.href = "/";
     });
-    
+
 
     // Registration form handling
     const registrationForm = document.getElementById('registrationForm');
@@ -56,10 +56,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (response.status === 404) {
                 // Store the status in sessionStorage
                 sessionStorage.setItem("errorStatus", response.status);
-        
+
                 // Redirect to error page
                 window.location.href = "/error.html";
-              }
+            }
         } catch (error) {
             console.error("Error:", error);
             showModal("An error occurred", false);
@@ -125,10 +125,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (response.status === 404) {
                     // Store the status in sessionStorage
                     sessionStorage.setItem("errorStatus", response.status);
-            
+
                     // Redirect to error page
                     window.location.href = "/error.html";
-                  }
+                }
             } catch (error) {
                 console.error('Error during login:', error.message);
                 showModal('An unexpected error occurred', false);

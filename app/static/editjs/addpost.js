@@ -38,7 +38,7 @@ post_form.addEventListener("submit", async function (e) {
                 sessionStorage.setItem("errorStatus", response.status);
                 window.location.href = "/errors.html";
             } else {
-                showModal("An error occurred: " + response.status);
+                window.location.href = "/login"
             }
         } else {
             const post = await response.json(); // Get post details
