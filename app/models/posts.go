@@ -72,7 +72,6 @@ func CreatePost(title, content string, authorId int) (*PostDTO, error) {
 	return &post, nil
 }
 
-
 func GetAllPosts(page, limit int) ([]*PostDTO, error) {
 	db, err := config.InitDB()
 	if err != nil {
@@ -109,7 +108,6 @@ func GetAllPosts(page, limit int) ([]*PostDTO, error) {
 	}
 	return posts, nil
 }
-
 
 // // Get the liked posts from database:
 func GetLikedPosts(userId int) (map[int]bool, error) {

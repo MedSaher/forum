@@ -38,6 +38,11 @@ func GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, post := range posts {
+		post.Title = html.UnescapeString(post.Title)
+		post.Content = html.UnescapeString(post.Content)
+	}
+
 	// Set headers and encode response
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
