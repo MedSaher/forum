@@ -92,6 +92,32 @@ func DeleteSessionByUUID(uuid string) error {
 	return nil
 }
 
+func DeleteSessionByUserId(userID int) error {
+	db, err := config.InitDB()
+	if err != nil {
+		return fmt.Errorf("failed to initialize database: %v", err)
+	}
+
+	defer db.Close()
+
+	result, err := db.Exec("DELETE FROM Session WHERE UserID = ?", userID)
+
+	if err != nil {
+		return fmt.Errorf("failed to delete session %v", err)
+	}
+
+	// Check if a row was actually deleted
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check affected rows: %v", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no session found with UserID: %v", userID)
+	}
+
+	return nil
+}
+
 // Get user id from session:
 func GetUserIdFromSession(rq *http.Request) (int, error) {
 	cookie, err := rq.Cookie("session_token")
@@ -132,5 +158,4 @@ func DeleteAllSessions() {
 		db.Exec("DELETE FROM Session")
 	}
 	defer db.Close()
-	
 }

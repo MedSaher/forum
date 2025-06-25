@@ -156,62 +156,60 @@ func isAllowedFileType(filename string) bool {
 
 // LoginHandler handles user login requests
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method == http.MethodGet {
-        Tmpl.ExecuteTemplate(w, "user.html", nil)
-        return
-    }
+	if r.Method != http.MethodPost {
+		Tmpl.ExecuteTemplate(w, "user.html", nil)
+		return
+	}
 
-    credentials := &Credentials{}
-    if err := json.NewDecoder(r.Body).Decode(credentials); err != nil {
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
-        return
-    }
+	credentials := &Credentials{}
+	if err := json.NewDecoder(r.Body).Decode(credentials); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-    // Fetch user by email
-    user, err := models.GetUserByEmail(credentials.Email)
-    if err != nil {
-        http.Error(w, "Invalid email or password", http.StatusUnauthorized)
-        return
-    }
+	// Fetch user by email
+	user, err := models.GetUserByEmail(credentials.Email)
+	if err != nil {
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
 
-    // Check if the user already has an active session
-    existingSession, err := models.GetSessionByUserID(user.ID)
-    if err == nil && existingSession.ExpiresAt.After(time.Now()) {
-        http.Error(w, "User is already logged in from another device", http.StatusConflict)
-        return
-    }
+	
+	// Validate password
+	if !utils.ValidatePassword(user.PasswordHash, credentials.Password) {
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
+	// Check if the user already has an active session
+	existingSession, err := models.GetSessionByUserID(user.ID)
+	if err == nil && existingSession.ExpiresAt.After(time.Now()) {
+		models.DeleteSessionByUserId(user.ID)
+	}
 
-    // Validate password
-    if !utils.ValidatePassword(user.PasswordHash, credentials.Password) {
-        http.Error(w, "Invalid email or password", http.StatusUnauthorized)
-        return
-    }
+	// Create a new session
+	session, err := CreateSession(user.ID, 24*time.Hour)
+	if err != nil {
+		http.Error(w, "Failed to create session", http.StatusInternalServerError)
+		return
+	}
 
-    // Create a new session
-    session, err := CreateSession(user.ID, 24*time.Hour)
-    if err != nil {
-        http.Error(w, "Failed to create session", http.StatusInternalServerError)
-        return
-    }
+	// Set a secure session cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    session.UUID,
+		Expires:  session.ExpiresAt,
+		HttpOnly: true,
+		Secure:   r.TLS != nil,
+		Path:     "/",
+	})
 
-    // Set a secure session cookie
-    http.SetCookie(w, &http.Cookie{
-        Name:     "session_token",
-        Value:    session.UUID,
-        Expires:  session.ExpiresAt,
-        HttpOnly: true,
-        Secure:   r.TLS != nil,
-        Path:     "/",
-    })
-
-    response := map[string]string{
-        "message":   "User logged in successfully",
-        "user_name": user.FirstName,
-    }
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(response)
+	response := map[string]string{
+		"message":   "User logged in successfully",
+		"user_name": user.FirstName,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
-
 
 // Extract the loged in user:
 func LogedInUser(wr http.ResponseWriter, rq *http.Request) {
