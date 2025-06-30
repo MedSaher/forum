@@ -42,6 +42,8 @@ post_form.addEventListener("submit", async function (e) {
             }
         } else {
             const post = await response.json(); // Get post details
+            console.log("the new created post: ", post);
+            
             // Dynamically create and add the new post to the page
             const postId = document.createElement("input")
             postId.type = "hidden"

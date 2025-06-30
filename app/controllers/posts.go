@@ -61,10 +61,7 @@ func PostsHandler(w http.ResponseWriter, r *http.Request) {
 // AddPost function to create a new post and send the newly created post as a response.
 func AddPost(wr http.ResponseWriter, rq *http.Request) {
 	if rq.Method == http.MethodGet {
-		if err := Tmpl.ExecuteTemplate(wr, "post_form.html", nil); err != nil {
-			http.Error(wr, err.Error(), http.StatusInternalServerError)
-			return
-		}
+			http.Error(wr, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -120,10 +117,19 @@ func AddPost(wr http.ResponseWriter, rq *http.Request) {
 			http.Error(wr, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		
 		if err := models.LinkPostToCategory(newPost.ID, categoryID); err != nil {
 			http.Error(wr, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	}
+
+	newPost.CategoryName += categories[0]
+	for i, category := range categories {
+		if i == 0 {
+			continue
+		}
+		newPost.CategoryName += ", "+ category
 	}
 	// Respond with new post details
 	wr.Header().Set("Content-Type", "application/json")
