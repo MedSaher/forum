@@ -1,3 +1,0 @@
-// TODO: Move the post form off of the /add_post route. It shouldn't be located there.
-
-// TODO: Fix post creation - category is not being sent from the back-end when a new post is created.
